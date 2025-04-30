@@ -1,0 +1,48 @@
+cat > .gitignore << 'EOL'
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Build outputs
+.next/
+out/
+build
+dist
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Caches
+.vercel
+.cache
+.turbo
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor specifieke bestanden
+.idea
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Testing
+coverage
+.nyc_output
+
+# Strapi
+license.txt
+exports
+*.cache
+EOL

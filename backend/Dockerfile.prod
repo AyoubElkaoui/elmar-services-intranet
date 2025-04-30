@@ -1,0 +1,25 @@
+# Production Dockerfile voor Strapi
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Kopieer package.json en package-lock.json
+COPY package.json package-lock.json* ./
+
+# Installeer dependencies voor productie
+RUN npm ci --production
+
+# Kopieer de rest van de applicatie
+COPY . .
+
+# Build de applicatie
+RUN npm run build
+
+# Expose de poort waar Strapi op draait
+EXPOSE 1337
+
+# Set environment naar productie
+ENV NODE_ENV production
+
+# Start de productie server
+CMD ["npm", "run", "start"]

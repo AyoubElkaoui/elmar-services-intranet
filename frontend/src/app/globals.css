@@ -1,0 +1,30 @@
+@import "tailwindcss";
+@config "../../tailwind.config.js";
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-rgb: 244, 244, 245;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: rgb(var(--background-rgb));
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-accent hover:bg-accent-dark text-white font-medium py-2 px-4 rounded transition-colors;
+  }
+
+  .btn-secondary {
+    @apply bg-transparent hover:bg-gray-100 text-primary font-medium py-2 px-4 border border-primary rounded transition-colors;
+  }
+
+  .card {
+    @apply bg-white rounded-lg shadow-md p-6;
+  }
+
+  .section-title {
+    @apply text-xl font-bold text-primary mb-4;
+  }
+}
