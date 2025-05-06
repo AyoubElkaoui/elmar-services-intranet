@@ -1,6 +1,6 @@
 // src/app/page.tsx (Aangepaste layout)
 import { Metadata } from 'next'
-import { IoDocumentText, IoPeople, IoCalendar, IoLink } from 'react-icons/io5';
+import { IoDocumentText, IoPeople, IoLink } from 'react-icons/io5';
 import { BsBook, BsClipboard } from 'react-icons/bs';
 import WelkomstBanner from '@/components/WelkomstBanner'
 import NieuwsSectie from '@/components/NieuwsSectie'
@@ -13,8 +13,7 @@ import PollEnqueteSectie from '@/components/PollEnqueteSectie'
 import SnelleToolLinksSectie from '@/components/SnelleToolLinksSectie'
 import KalenderSectie from '@/components/KalenderSectie'
 import FAQSectie from '@/components/FAQSectie'
-import { Nieuws, Snelkoppeling, Evenement } from '@/types'
-
+import { Nieuws, Snelkoppeling } from '@/types'
 export const metadata: Metadata = {
   title: 'Home - Elmar Services Intranet',
   description: 'Welkom bij het intranet van Elmar Services',
@@ -54,12 +53,6 @@ const snelkoppelingen: Snelkoppeling[] = [
   { id: 6, titel: 'Externe links', icoon: <IoLink size={24} />, url: '/links' }
 ];
 
-const aankomende_evenementen: Evenement[] = [
-  { id: 1, titel: 'Teamoverleg Marketing', datum: '2023-03-16', type: 'vergadering' },
-  { id: 2, titel: 'Verjaardag Jan Janssen', datum: '2023-03-18', type: 'verjaardag' },
-  { id: 3, titel: 'Kwartaalpresentatie', datum: '2023-03-22', type: 'presentatie' },
-  { id: 4, titel: 'Bedrijfsborrel', datum: '2023-03-24', type: 'sociaal' }
-];
 
 export default function Home() {
   return (

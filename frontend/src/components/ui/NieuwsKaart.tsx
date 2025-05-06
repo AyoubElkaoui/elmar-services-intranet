@@ -1,3 +1,5 @@
+"use client";
+
 import Image from 'next/image'
 import Link from 'next/link'
 import { formateerDatum } from '@/utils/helpers'
@@ -8,12 +10,15 @@ interface NieuwsKaartProps {
 }
 
 export default function NieuwsKaart({ nieuws }: NieuwsKaartProps) {
+    // Gebruik een default image als fallback
+    const imageUrl = nieuws.afbeelding || '/images/placeholder.svg';
+
     return (
         <div className="flex flex-col md:flex-row border-b border-gray-200 pb-4 last:border-0 last:pb-0">
             <div className="w-full md:w-1/4 mb-4 md:mb-0 md:mr-4">
                 <div className="relative h-40 md:h-24 bg-gray-200 rounded overflow-hidden">
                     <Image
-                        src={nieuws.afbeelding}
+                        src={imageUrl}
                         alt={nieuws.titel}
                         fill
                         sizes="(max-width: 768px) 100vw, 33vw"

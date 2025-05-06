@@ -1,67 +1,79 @@
+"use client";
+
 // src/components/ui/CalendarDay.tsx
+import React from 'react';
 import { formatDatumKort } from '@/utils/dateUtils';
+import { Evenement } from '@/types/index';
 
 interface CalendarDayProps {
     date: Date;
-    events: Array<{id: number; title: string; type: string}>;
+    events?: Evenement[];
     isCurrentMonth: boolean;
     isToday: boolean;
-    onClick: (date: Date) => void;
+    onClick?: () => void;
 }
 
-export default function CalendarDay({ date, events, isCurrentMonth, isToday, onClick }: CalendarDayProps) {
-    // Maximaal aantal events om te tonen
-    const MAX_VISIBLE_EVENTS = 3;
+export default function CalendarDay({
+                                        date,
+                                        events = [],
+                                        isCurrentMonth,
+                                        isToday,
+                                        onClick
+                                    }: CalendarDayProps) {
 
-    // Event dot kleur op basis van type
-    const getEventColor = (type: string) => {
-        switch(type) {
-            case 'meeting':
-                return 'bg-blue-500';
-            case 'birthday':
-                return 'bg-pink-500';
-            case 'anniversary':
-                return 'bg-yellow-500';
-            case 'holiday':
-                return 'bg-green-500';
-            case 'deadline':
-                return 'bg-red-500';
-            default:
-                return 'bg-purple-500';
-        }
-    };
+    // Gebruik formatDatumKort voor de tooltip of aria-label voor toegankelijkheid
+    const formattedDate = formatDatumKort(date.toISOString());
+    const ariaLabel = `${formattedDate}, ${events.length} evenementen`;
+
+    // Bereken CSS classes op basis van de prop values
+    const dayClasses = `
+    relative h-24 p-1 border border-gray-200
+    ${isCurrentMonth ? 'bg-white' : 'bg-gray-50 text-gray-400'}
+    ${isToday ? 'ring-2 ring-primary ring-inset' : ''}
+    ${onClick ? 'cursor-pointer hover:bg-gray-50' : ''}
+  `.trim();
+
+    // Toon max 3 events, de rest wordt getoond als "+X meer"
+    const maxDisplayEvents = 3;
+    const displayEvents = events.slice(0, maxDisplayEvents);
+    const remainingEvents = events.length - maxDisplayEvents;
 
     return (
         <div
-            className={`h-24 p-1 border border-gray-200 overflow-hidden ${
-                isCurrentMonth ? 'bg-white' : 'bg-gray-50'
-            } ${
-                isToday ? 'ring-2 ring-accent ring-offset-2' : ''
-            }`}
-            onClick={() => onClick(date)}
+            className={dayClasses}
+            onClick={onClick}
+            aria-label={ariaLabel}
+            role={onClick ? "button" : undefined}
+            title={ariaLabel} // Gebruik formatDatumKort hier nog een keer
         >
-            <div className="flex justify-between">
-    <span className={`text-sm ${isCurrentMonth ? '' : 'text-gray-400'} ${
-        isToday ? 'font-bold text-accent' : ''
-    }`}>
-    {date.getDate()}
-    </span>
-                <span className="text-xs text-gray-400">
-        {events.length > 0 && `${events.length} items`}
-        </span>
+            {/* Dagnummer */}
+            <div className={`text-right font-medium ${isToday ? 'text-primary' : ''}`}>
+                {date.getDate()}
             </div>
 
-            <div className="mt-1 space-y-1 overflow-y-auto max-h-16">
-                {events.slice(0, MAX_VISIBLE_EVENTS).map(event => (
-                    <div key={event.id} className="flex items-center text-xs overflow-hidden">
-                        <span className={`h-2 w-2 rounded-full mr-1 flex-shrink-0 ${getEventColor(event.type)}`}></span>
-                        <span className="truncate">{event.title}</span>
+            {/* Events */}
+            <div className="mt-1 space-y-1 overflow-hidden">
+                {displayEvents.map((event, index) => (
+                    <div
+                        key={index}
+                        className={`
+              text-xs truncate rounded px-1 py-0.5
+              ${event.type === 'vergadering' ? 'bg-blue-100 text-blue-800' : ''}
+              ${event.type === 'verjaardag' ? 'bg-pink-100 text-pink-800' : ''}
+              ${event.type === 'presentatie' ? 'bg-amber-100 text-amber-800' : ''}
+              ${event.type === 'sociaal' ? 'bg-green-100 text-green-800' : ''}
+              ${event.type === 'anders' ? 'bg-purple-100 text-purple-800' : ''}
+            `}
+                        title={`${event.titel} (${event.startTijd} - ${event.eindTijd})`}
+                    >
+                        {event.titel}
                     </div>
                 ))}
 
-                {events.length > MAX_VISIBLE_EVENTS && (
-                    <div className="text-xs text-gray-500 pl-3">
-                        +{events.length - MAX_VISIBLE_EVENTS} meer
+                {/* Toon indicator voor overige events */}
+                {remainingEvents > 0 && (
+                    <div className="text-xs text-gray-500 px-1">
+                        +{remainingEvents} meer
                     </div>
                 )}
             </div>

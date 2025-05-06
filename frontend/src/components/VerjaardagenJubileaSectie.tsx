@@ -1,3 +1,5 @@
+"use client";
+
 // src/components/VerjaardagenJubileaSectie.tsx
 import Link from 'next/link';
 import VerjaardagJubileumCard from '@/components/ui/VerjaardagJubileumCard';
@@ -33,7 +35,10 @@ export default function VerjaardagenJubileaSectie() {
             <div className="space-y-2">
                 {teTonenItems.length > 0 ? (
                     teTonenItems.map(item => (
-                        <VerjaardagJubileumCard key={item.id} item={item} />
+                        <VerjaardagJubileumCard
+                            key={item.id}
+                            item={item}
+                        />
                     ))
                 ) : (
                     <p className="text-center py-4 text-gray-500">Geen verjaardagen of jubilea deze maand</p>

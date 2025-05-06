@@ -1,66 +1,76 @@
+"use client";
+
 // src/components/ui/SnelleToolLinks.tsx
-import Link from 'next/link';
-import { Tool } from '@/types/tools';
+import React from 'react';
 import {
-    FiMail, FiMessageSquare, FiCalendar, FiFileText,
-    FiUser, FiUsers, FiBarChart2, FiGrid
+    FiCalendar,
+    FiFolder,
+    FiFileText,
+    FiMail,
+    FiUser,
+    FiPhone,
+    FiMonitor,
 } from 'react-icons/fi';
+import { ToolLink } from '@/types/tools';
 
-interface SnelleToolLinksProps {
-    tools: Tool[];
-    maxItems?: number;
-}
+// Intern gebruikte hardcoded snelle links
+const toolLinks: ToolLink[] = [
+    {
+        id: 1,
+        titel: 'Agenda',
+        url: '/agenda',
+        icon: <FiCalendar className="text-primary" size={20} />
+    },
+    {
+        id: 2,
+        titel: 'Documenten',
+        url: '/documenten',
+        icon: <FiFolder className="text-primary" size={20} />
+    },
+    {
+        id: 3,
+        titel: 'Formulieren',
+        url: '/formulieren',
+        icon: <FiFileText className="text-primary" size={20} />
+    },
+    {
+        id: 4,
+        titel: 'Webmail',
+        url: '/mail',
+        icon: <FiMail className="text-primary" size={20} />
+    },
+    {
+        id: 5,
+        titel: 'Personeelsgids',
+        url: '/personeel',
+        icon: <FiUser className="text-primary" size={20} />
+    },
+    {
+        id: 6,
+        titel: 'Telefoongids',
+        url: '/telefoongids',
+        icon: <FiPhone className="text-primary" size={20} />
+    },
+    {
+        id: 7,
+        titel: 'IT Helpdesk',
+        url: '/helpdesk',
+        icon: <FiMonitor className="text-primary" size={20} />
+    }
+];
 
-export default function SnelleToolLinks({ tools, maxItems = 8 }: SnelleToolLinksProps) {
-    // Verkrijg icoon op basis van de icoonstring
-    const getToolIcoon = (icoonString: string) => {
-        switch(icoonString) {
-            case 'microsoft-office':
-                return <FiFileText size={20} className="text-blue-600" />;
-            case 'microsoft-teams':
-                return <FiMessageSquare size={20} className="text-blue-500" />;
-            case 'expense':
-                return <FiBarChart2 size={20} className="text-green-600" />;
-            case 'calendar':
-                return <FiCalendar size={20} className="text-red-500" />;
-            case 'project':
-                return <FiGrid size={20} className="text-purple-600" />;
-            case 'crm':
-                return <FiUsers size={20} className="text-orange-500" />;
-            default:
-                return <FiFileText size={20} className="text-gray-600" />;
-        }
-    };
-
-    // Verkrijg kleurklasse op basis van de categorie
-    const getCategoryColorClass = (category: string) => {
-        switch(category) {
-            case 'communicatie':
-                return 'bg-blue-50 border-blue-200';
-            case 'productiviteit':
-                return 'bg-green-50 border-green-200';
-            case 'hr':
-                return 'bg-orange-50 border-orange-200';
-            case 'project':
-                return 'bg-purple-50 border-purple-200';
-            default:
-                return 'bg-gray-50 border-gray-200';
-        }
-    };
-
+export default function SnelleToolLinks() {
     return (
-        <div className="grid grid-cols-4 gap-3">
-            {tools.slice(0, maxItems).map(tool => (
-                <Link
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            {toolLinks.map(tool => (
+                <a
                     key={tool.id}
                     href={tool.url}
-                    className={`flex flex-col items-center justify-center p-3 rounded-lg border hover:shadow-sm transition-shadow ${getCategoryColorClass(tool.categorie)}`}
+                    className="flex items-center p-3 bg-white rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
                 >
-                    <div className="mb-2">
-                        {getToolIcoon(tool.icoon)}
-                    </div>
-                    <span className="text-xs text-center font-medium">{tool.naam}</span>
-                </Link>
+                    <span className="mr-3">{tool.icon}</span>
+                    <span className="font-medium">{tool.titel}</span>
+                </a>
             ))}
         </div>
     );

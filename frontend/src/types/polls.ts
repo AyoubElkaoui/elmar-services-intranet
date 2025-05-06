@@ -1,4 +1,12 @@
 // src/types/polls.ts
+
+export interface PollOptie {
+    id: number;
+    tekst: string;
+    aantalStemmen: number;
+    percentage: number;
+}
+
 export interface Poll {
     id: number;
     vraag: string;
@@ -8,18 +16,18 @@ export interface Poll {
     actief: boolean;
 }
 
-export interface PollOptie {
-    id: number;
-    tekst: string;
-    aantalStemmen: number;
-    percentage: number;
-}
-
 export interface Enquete {
     id: number;
     titel: string;
     beschrijving: string;
-    deadline: string;
-    aantalVragen: number;
-    ingevuld: boolean;
+    vragen: number;
+    eindDatum: string;
+    url: string;
+}
+
+export interface PollResultaat {
+    pollId: number;
+    stemOptieId: number;
+    gebruikerId: number;
+    stemDatum: string;
 }

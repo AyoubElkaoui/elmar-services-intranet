@@ -1,4 +1,5 @@
-// src/components/ui/VergaderzaalCard.tsx
+"use client";
+
 import Image from 'next/image';
 import { formatTijd } from '@/utils/dateUtils';
 import { Vergaderzaal, Reservering } from '@/types/vergaderzaal';
@@ -11,6 +12,9 @@ interface VergaderzaalCardProps {
 }
 
 export default function VergaderzaalCard({ vergaderzaal, huidigeReservering, onReserveer }: VergaderzaalCardProps) {
+    // Gebruik een default image als fallback
+    const imageUrl = vergaderzaal.foto || '/images/vergaderzaal-placeholder.jpg';
+
     const getFaciliteitIcoon = (faciliteitNaam: string) => {
         switch(faciliteitNaam.toLowerCase()) {
             case 'videoconferentie':
@@ -28,7 +32,7 @@ export default function VergaderzaalCard({ vergaderzaal, huidigeReservering, onR
         <div className="bg-white rounded-lg shadow-sm overflow-hidden border hover:shadow-md transition-shadow">
             <div className="relative h-32 w-full">
                 <Image
-                    src={vergaderzaal.foto}
+                    src={imageUrl}
                     alt={vergaderzaal.naam}
                     fill
                     className="object-cover"
