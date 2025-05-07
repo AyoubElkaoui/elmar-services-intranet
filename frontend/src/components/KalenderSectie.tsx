@@ -10,7 +10,7 @@ import { formatDatum } from '@/utils/dateUtils';
 export default function KalenderSectie() {
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
-    // Handler voor het klikken op een dag
+    // Handler for clicking on a day
     const handleDayClick = (date: Date) => {
         setSelectedDate(date);
     };
@@ -33,7 +33,7 @@ export default function KalenderSectie() {
                         Evenementen op {formatDatum(selectedDate.toISOString())}
                     </h3>
 
-                    {/* Filter evenementen voor de geselecteerde datum */}
+                    {/* Filter events for the selected date */}
                     {kalenderEvenementen.filter(event => {
                         const eventDate = new Date(event.datum);
                         return (

@@ -1,44 +1,42 @@
 // src/components/DagagendaSectie.tsx
+"use client";
+
 import Link from 'next/link';
 import { formatDatum, getDagVanDeWeek } from '@/utils/dateUtils';
 import DagagendaItem from '@/components/ui/DagagendaItem';
-import {mockReserveringen, mockVergaderzalen} from '@/data/mockVergaderzalen';
-import { mockVerjaardagenJubilea } from '@/data/mockVerjaardagen';
+import { useEffect, useState } from 'react';
+import { kalenderEvenementen } from '@/data/mockCalendarEvents';
+import { Evenement } from '@/types';
 
 export default function DagagendaSectie() {
+    const [agendaItems, setAgendaItems] = useState<any[]>([]);
     const vandaag = new Date();
 
-    // Combineer alle agenda-items voor vandaag
-    const agendaItems = [
-        // Vergaderingen
-        ...mockReserveringen
-            .filter(res => new Date(res.startTijd).toDateString() === vandaag.toDateString())
-            .map(res => ({
-                id: res.id,
-                titel: res.titel,
-                startTijd: res.startTijd,
-                eindTijd: res.eindTijd,
-                type: 'vergadering' as const,
-                locatie: `Zaal: ${mockVergaderzalen.find(z => z.id === res.vergaderzaalId)?.naam}`
-            })),
+    useEffect(() => {
+        // Filter events for today
+        const todayEvents = kalenderEvenementen.filter(event => {
+            const eventDate = new Date(event.datum);
+            return eventDate.toDateString() === vandaag.toDateString();
+        });
 
-        // Verjaardagen en jubilea
-        ...mockVerjaardagenJubilea
-            .filter(vj => new Date(vj.datum).toDateString() === vandaag.toDateString())
-            .map(vj => ({
-                id: vj.id,
-                titel: `${vj.type === 'verjaardag' ? 'Verjaardag' : 'Jubileum'} ${vj.naam}`,
-                startTijd: new Date(new Date().setHours(9, 0, 0, 0)).toISOString(),
-                eindTijd: new Date(new Date().setHours(17, 0, 0, 0)).toISOString(),
-                type: vj.type === 'verjaardag' ? 'verjaardag' as const : 'anders' as const,
-                locatie: vj.afdeling
-            }))
-    ];
+        // Convert to the format expected by the DagagendaItem component
+        const formattedItems = todayEvents.map(event => ({
+            id: event.id,
+            titel: event.titel,
+            startTijd: new Date(new Date().setHours(
+                parseInt(event.startTijd.split(':')[0]),
+                parseInt(event.startTijd.split(':')[1]), 0, 0
+            )).toISOString(),
+            eindTijd: new Date(new Date().setHours(
+                parseInt(event.eindTijd.split(':')[0]),
+                parseInt(event.eindTijd.split(':')[1]), 0, 0
+            )).toISOString(),
+            type: event.type as 'vergadering' | 'verjaardag' | 'presentatie' | 'sociaal' | 'anders',
+            locatie: event.locatie
+        }));
 
-    // Sorteer op starttijd
-    const gesorteerdeItems = agendaItems.sort((a, b) =>
-        new Date(a.startTijd).getTime() - new Date(b.startTijd).getTime()
-    );
+        setAgendaItems(formattedItems);
+    }, []);
 
     return (
         <div className="bg-white rounded-lg shadow-md p-4 mb-8">
@@ -55,8 +53,8 @@ export default function DagagendaSectie() {
             </div>
 
             <div className="space-y-2">
-                {gesorteerdeItems.length > 0 ? (
-                    gesorteerdeItems.map(item => (
+                {agendaItems.length > 0 ? (
+                    agendaItems.map(item => (
                         <DagagendaItem key={`${item.id}-${item.type}`} item={item} />
                     ))
                 ) : (

@@ -1,118 +1,113 @@
-"use client";
-
 // src/components/ui/PollEnqueteWidget.tsx
 import React, { useState } from 'react';
-import { formatDatum } from '@/utils/dateUtils';
-import { Poll, PollOptie } from '@/types/polls';
 
-// Gebruik PollOptie bij het maken van nieuwe opties
-interface PollEnqueteWidgetProps {
-    poll: Poll;
+interface PollOption {
+    id: string;
+    text: string;
+    votes: number;
 }
 
-export default function PollEnqueteWidget({ poll }: PollEnqueteWidgetProps) {
-    const [selectedOptionId, setSelectedOptionId] = useState<number | null>(null);
-    const [hasVoted, setHasVoted] = useState(false);
-    const [localPoll, setLocalPoll] = useState<Poll>(poll);
+interface Poll {
+    id: string;
+    question: string;
+    options: PollOption[];
+    endDate: string;
+    totalVotes: number;
+}
 
-    // Functie om de UI bij te werken na het stemmen
-    const handleVote = (e: React.FormEvent) => {
-        e.preventDefault();
+const mockPoll: Poll = {
+    id: '1',
+    question: 'Welke dag heeft je voorkeur voor het bedrijfsuitje?',
+    options: [
+        { id: '1', text: 'Vrijdag 12 juni', votes: 8 },
+        { id: '2', text: 'Zaterdag 13 juni', votes: 15 },
+        { id: '3', text: 'Vrijdag 19 juni', votes: 7 }
+    ],
+    endDate: '2023-05-13',
+    totalVotes: 30
+};
 
-        if (selectedOptionId === null) return;
+const PollEnqueteWidget: React.FC = () => {
+    const [poll] = useState<Poll>(mockPoll);
+    const [selectedOption, setSelectedOption] = useState<string | null>(null);
+    const [hasVoted, setHasVoted] = useState<boolean>(false);
 
-        // Maak een nieuwe PollOptie array met bijgewerkte stemmen
-        const updatedOptions = localPoll.opties.map(optie => {
-            if (optie.id === selectedOptionId) {
-                // Gebruik de PollOptie interface voor het bijgewerkte object
-                const updatedOption: PollOptie = {
-                    ...optie,
-                    aantalStemmen: optie.aantalStemmen + 1
-                };
-                return updatedOption;
-            }
-            return optie;
-        });
+    const handleVote = () => {
+        if (!selectedOption) return;
 
-        // Bereken nieuwe percentages
-        const totalVotes = updatedOptions.reduce((sum, option) => sum + option.aantalStemmen, 0);
-        const optionsWithPercentages = updatedOptions.map(option => ({
-            ...option,
-            percentage: Math.round((option.aantalStemmen / totalVotes) * 100)
-        }));
-
-        // Update de lokale poll state
-        setLocalPoll({
-            ...localPoll,
-            opties: optionsWithPercentages,
-            aantalStemmen: totalVotes
-        });
-
+        // In a real app, this would call an API to register the vote
         setHasVoted(true);
     };
 
+    const calculatePercentage = (votes: number) => {
+        return Math.round((votes / poll.totalVotes) * 100);
+    };
+
     return (
-        <div className="bg-white rounded-lg shadow-sm p-4">
-            <h3 className="text-lg font-semibold mb-2">{localPoll.vraag}</h3>
+        <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center mb-4">
+                <i className="fas fa-chart-bar text-primary mr-2"></i>
+                <h2 className="text-xl font-bold text-primary">Poll</h2>
+            </div>
+
+            <h3 className="font-medium text-lg mb-2">{poll.question}</h3>
             <p className="text-sm text-gray-600 mb-4">
-                Sluit op {formatDatum(localPoll.eindDatum)} • {localPoll.aantalStemmen} stemmen
+                Sluit op {new Date(poll.endDate).toLocaleDateString('nl-NL')} • {poll.totalVotes} stemmen
             </p>
 
-            {hasVoted ? (
-                // Resultaten view
-                <div className="space-y-3">
-                    {localPoll.opties.map(optie => (
-                        <div key={optie.id} className="space-y-1">
-                            <div className="flex justify-between text-sm">
-                                <span>{optie.tekst}</span>
-                                <span className="font-medium">{optie.percentage}%</span>
-                            </div>
-                            <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                                <div
-                                    className="h-full bg-primary rounded-full"
-                                    style={{ width: `${optie.percentage}%` }}
-                                />
-                            </div>
-                        </div>
-                    ))}
-                    <p className="text-sm text-gray-600 mt-2 italic">
-                        Bedankt voor je stem!
-                    </p>
-                </div>
-            ) : (
-                // Stem formulier
-                <form onSubmit={handleVote}>
-                    <div className="space-y-2 mb-4">
-                        {localPoll.opties.map(optie => (
-                            <label
-                                key={optie.id}
-                                className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer"
-                            >
+            {!hasVoted ? (
+                <>
+                    <div className="space-y-3 mb-4">
+                        {poll.options.map(option => (
+                            <div key={option.id} className="flex items-center">
                                 <input
                                     type="radio"
+                                    id={`option-${option.id}`}
                                     name="poll-option"
-                                    value={optie.id}
-                                    onChange={() => setSelectedOptionId(optie.id)}
                                     className="mr-3"
+                                    checked={selectedOption === option.id}
+                                    onChange={() => setSelectedOption(option.id)}
                                 />
-                                <span>{optie.tekst}</span>
-                            </label>
+                                <label htmlFor={`option-${option.id}`}>{option.text}</label>
+                            </div>
                         ))}
                     </div>
 
                     <button
-                        type="submit"
-                        disabled={selectedOptionId === null}
-                        className={`w-full py-2 rounded text-center ${
-                            selectedOptionId === null
-                                ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                                : 'bg-primary text-white hover:bg-primary-dark'
-                        }`}
+                        className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
+                        disabled={!selectedOption}
+                        onClick={handleVote}
                     >
                         Stem
                     </button>
-                </form>
+                </>
+            ) : (
+                <div className="space-y-4">
+                    {poll.options.map(option => {
+                        const percentage = calculatePercentage(option.votes);
+                        return (
+                            <div key={option.id}>
+                                <div className="flex justify-between mb-1">
+                                    <span>{option.text}</span>
+                                    <span>{percentage}%</span>
+                                </div>
+                                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                                    <div
+                                        className="bg-blue-600 h-2.5 rounded-full"
+                                        style={{ width: `${percentage}%` }}
+                                    ></div>
+                                </div>
+                            </div>
+                        );
+                    })}
+
+                    <p className="text-sm text-gray-600 italic mt-4">
+                        Bedankt voor je stem!
+                    </p>
+                </div>
             )}
         </div>
     );
-}
+};
+
+export default PollEnqueteWidget;
