@@ -6,10 +6,19 @@ import { formatDatum, getDagVanDeWeek } from '@/utils/dateUtils';
 import DagagendaItem from '@/components/ui/DagagendaItem';
 import { useEffect, useState } from 'react';
 import { kalenderEvenementen } from '@/data/mockCalendarEvents';
-import { Evenement } from '@/types';
+
+// Define the AgendaItem interface
+interface AgendaItem {
+    id: number;
+    titel: string;
+    startTijd: string;
+    eindTijd: string;
+    type: 'vergadering' | 'verjaardag' | 'presentatie' | 'sociaal' | 'anders';
+    locatie?: string;
+}
 
 export default function DagagendaSectie() {
-    const [agendaItems, setAgendaItems] = useState<any[]>([]);
+    const [agendaItems, setAgendaItems] = useState<AgendaItem[]>([]);
     const vandaag = new Date();
 
     useEffect(() => {
@@ -36,7 +45,7 @@ export default function DagagendaSectie() {
         }));
 
         setAgendaItems(formattedItems);
-    }, []);
+    }, [vandaag]);
 
     return (
         <div className="bg-white rounded-lg shadow-md p-4 mb-8">

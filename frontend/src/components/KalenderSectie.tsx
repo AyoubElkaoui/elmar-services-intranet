@@ -1,7 +1,7 @@
 "use client";
 
 // src/components/KalenderSectie.tsx
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { FaCalendarAlt } from 'react-icons/fa';
 import Calendar from '@/components/ui/Calendar';
 import { kalenderEvenementen } from '@/data/mockCalendarEvents';
@@ -11,9 +11,23 @@ export default function KalenderSectie() {
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
     // Handler for clicking on a day
-    const handleDayClick = (date: Date) => {
+    const handleDayClick = useCallback((date: Date) => {
         setSelectedDate(date);
-    };
+    }, []);
+
+    // Use useMemo to avoid repeating the filter logic and prevent unnecessary re-renders
+    const filteredEvents = useMemo(() => {
+        if (!selectedDate) return [];
+
+        return kalenderEvenementen.filter(event => {
+            const eventDate = new Date(event.datum);
+            return (
+                eventDate.getDate() === selectedDate.getDate() &&
+                eventDate.getMonth() === selectedDate.getMonth() &&
+                eventDate.getFullYear() === selectedDate.getFullYear()
+            );
+        });
+    }, [selectedDate]);
 
     return (
         <section className="bg-white rounded-lg shadow-md p-6">
@@ -25,6 +39,7 @@ export default function KalenderSectie() {
             <Calendar
                 events={kalenderEvenementen}
                 onDayClick={handleDayClick}
+                key="calendar-component" // Add a stable key
             />
 
             {selectedDate && (
@@ -33,24 +48,9 @@ export default function KalenderSectie() {
                         Evenementen op {formatDatum(selectedDate.toISOString())}
                     </h3>
 
-                    {/* Filter events for the selected date */}
-                    {kalenderEvenementen.filter(event => {
-                        const eventDate = new Date(event.datum);
-                        return (
-                            eventDate.getDate() === selectedDate.getDate() &&
-                            eventDate.getMonth() === selectedDate.getMonth() &&
-                            eventDate.getFullYear() === selectedDate.getFullYear()
-                        );
-                    }).length > 0 ? (
+                    {filteredEvents.length > 0 ? (
                         <ul className="space-y-3">
-                            {kalenderEvenementen.filter(event => {
-                                const eventDate = new Date(event.datum);
-                                return (
-                                    eventDate.getDate() === selectedDate.getDate() &&
-                                    eventDate.getMonth() === selectedDate.getMonth() &&
-                                    eventDate.getFullYear() === selectedDate.getFullYear()
-                                );
-                            }).map(event => (
+                            {filteredEvents.map(event => (
                                 <li key={event.id} className="border-b pb-3 last:border-b-0">
                                     <div className="font-medium">{event.titel}</div>
                                     <div className="text-sm text-gray-600">{event.startTijd} - {event.eindTijd} • {event.locatie}</div>

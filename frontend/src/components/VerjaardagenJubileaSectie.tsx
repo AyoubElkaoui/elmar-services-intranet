@@ -3,7 +3,6 @@
 
 import Link from 'next/link';
 import VerjaardagJubileumCard from '@/components/ui/VerjaardagJubileumCard';
-import { mockVerjaardagenJubilea } from '@/data/mockVerjaardagen';
 import { isDezeMaand, isVandaag, isDezeWeek } from '@/utils/dateUtils';
 import { useEffect, useState } from 'react';
 import { VerjaardagJubileum } from '@/types/verjaardag';

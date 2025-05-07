@@ -17,11 +17,30 @@ export interface TrafficIncident {
     end: { lat: number; lon: number };
 }
 
+interface Location {
+    lat: number;
+    lon: number;
+}
+
+interface City extends Location {
+    name: string;
+    roads: string[];
+}
+
+interface RouteResult {
+    time: number;
+    time_without_traffic?: number;
+}
+
+interface ApiResponse {
+    sources_to_targets: RouteResult[][];
+}
+
 // Amersfoort coördinaten
-const AMERSFOORT = { lat: 52.1561, lon: 5.3878 };
+const AMERSFOORT: Location = { lat: 52.1561, lon: 5.3878 };
 
 // Belangrijke steden in Nederland met bijbehorende hoofdwegen vanaf Amersfoort
-const MAJOR_CITIES = [
+const MAJOR_CITIES: City[] = [
     { name: "Amsterdam", lat: 52.3676, lon: 4.9041, roads: ["A1"] },
     { name: "Utrecht", lat: 52.0907, lon: 5.1214, roads: ["A28"] },
     { name: "Rotterdam", lat: 51.9244, lon: 4.4777, roads: ["A28", "A12", "A20"] },
@@ -66,7 +85,7 @@ export const fetchTrafficIncidents = async (): Promise<TrafficIncident[]> => {
             throw new Error(`Geoapify API gaf status ${response.status}`);
         }
 
-        const data = await response.json();
+        const data = await response.json() as ApiResponse;
         console.log("Ontvangen data:", data);
 
         const incidents: TrafficIncident[] = [];
@@ -76,7 +95,7 @@ export const fetchTrafficIncidents = async (): Promise<TrafficIncident[]> => {
             const results = data.sources_to_targets[0]; // Resultaten van Amersfoort naar alle steden
 
             // Voor elke bestemming, bereken de vertraging
-            results.forEach((result: any, index: number) => {
+            results.forEach((result: RouteResult, index: number) => {
                 const city = MAJOR_CITIES[index];
 
                 // Controleer of er reistijdgegevens zijn
