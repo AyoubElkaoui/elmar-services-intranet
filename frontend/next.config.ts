@@ -1,7 +1,24 @@
+// frontend/next.config.ts
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     output: 'standalone',
-    // This ensures the standalone output works with your Docker setup
+    // Images configuratie voor Strapi
+    images: {
+        remotePatterns: [
+            {
+                protocol: 'http',
+                hostname: 'localhost',
+                port: '1337',
+                pathname: '/uploads/**',
+            },
+            // Voor productie zou je hier je Strapi production domain toevoegen
+            // {
+            //     protocol: 'https',
+            //     hostname: 'your-strapi-domain.com',
+            //     pathname: '/uploads/**',
+            // }
+        ],
+    },
 };
 
 module.exports = nextConfig;

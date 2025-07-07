@@ -1,0 +1,77 @@
+{
+  "kind": "collectionType",
+  "collectionName": "bestanden",
+  "info": {
+    "singularName": "bestand",
+    "pluralName": "bestanden",
+    "displayName": "Bestand"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "titel": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255
+    },
+    "beschrijving": {
+      "type": "text",
+      "maxLength": 500,
+      "required": true
+    },
+    "Categorie": {
+      "type": "enumeration",
+      "enum": [
+        "beleid",
+        "procedures",
+        "formulieren",
+        "handboeken",
+        "it-documentatie",
+        "algemeen"
+      ]
+    },
+    "afdeling": {
+      "type": "enumeration",
+      "enum": [
+        "Alle",
+        "HR",
+        "IT",
+        "Marketing",
+        "Verkoop",
+        "Management"
+      ]
+    },
+    "tags": {
+      "type": "string"
+    },
+    "bestand": {
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
+      ],
+      "type": "media",
+      "multiple": false,
+      "required": true
+    },
+    "downloadbaar": {
+      "type": "boolean",
+      "default": true
+    },
+    "bekijkbaar": {
+      "type": "boolean",
+      "default": true
+    },
+    "versie": {
+      "type": "string",
+      "default": "1.0"
+    },
+    "auteur": {
+      "type": "string",
+      "required": true,
+      "default": "Beheerder"
+    }
+  }
+}

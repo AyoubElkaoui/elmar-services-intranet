@@ -1,0 +1,62 @@
+{
+  "kind": "collectionType",
+  "collectionName": "nieuws_items",
+  "info": {
+    "singularName": "nieuws-item",
+    "pluralName": "nieuws-items",
+    "displayName": "nieuws-item",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "titel": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255
+    },
+    "samenvatting": {
+      "type": "text",
+      "maxLength": 500,
+      "required": true
+    },
+    "inhoud": {
+      "type": "blocks",
+      "required": true
+    },
+    "Auteur": {
+      "type": "string",
+      "required": true,
+      "default": "Pien - Elmar Services"
+    },
+    "Categorie": {
+      "type": "enumeration",
+      "enum": [
+        "Algemeen",
+        "HR",
+        "IT",
+        "Marketing ",
+        "Verkoop"
+      ],
+      "required": true
+    },
+    "Uitgelicht": {
+      "type": "boolean",
+      "default": false,
+      "required": false
+    },
+    "afbeelding": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": [
+        "images",
+        "files"
+      ]
+    },
+    "publicatieDatum": {
+      "type": "date"
+    }
+  }
+}
