@@ -1,4 +1,3 @@
-// frontend/src/app/documenten/page.tsx - DEFINITIEVE WERKENDE VERSIE
 'use client'
 
 import { useState, useEffect } from 'react'
