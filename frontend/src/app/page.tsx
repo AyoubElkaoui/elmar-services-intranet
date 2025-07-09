@@ -1,82 +1,48 @@
-// src/app/page.tsx (Aangepaste layout)
-import { Metadata } from 'next'
-import { IoDocumentText, IoPeople, IoLink } from 'react-icons/io5';
-import { BsBook, BsClipboard } from 'react-icons/bs';
+'use client'
+
+import { useState, useEffect } from 'react'
 import WelkomstBanner from '@/components/WelkomstBanner'
-import NieuwsSectie from '@/components/NieuwsSectie'
-import SnelkoppelingenGrid from '@/components/SnelkoppelingenGrid'
-import WeerVerkeerSectie from '@/components/WeerVerkeerSectie'
-import DagagendaSectie from '@/components/DagagendaSectie'
-import VergaderzaalSectie from '@/components/VergaderzaalSectie'
-import VerjaardagenJubileaSectie from '@/components/VerjaardagenJubileaSectie'
-import PollEnqueteSectie from '@/components/PollEnqueteSectie'
 import SnelleToolLinksSectie from '@/components/SnelleToolLinksSectie'
+import NieuwsSectie from '@/components/NieuwsSectie'
 import KalenderSectie from '@/components/KalenderSectie'
-import FAQSectie from '@/components/FAQSectie'
-import { Nieuws, Snelkoppeling } from '@/types'
-export const metadata: Metadata = {
-  title: 'Home - Elmar Services Intranet',
-  description: 'Welkom bij het intranet van Elmar Services',
-}
+import DagagendaSectie from '@/components/DagagendaSectie'
+import VerjaardagenJubileaSectie from '@/components/VerjaardagenJubileaSectie'
+import VergaderzaalSectie from '@/components/VergaderzaalSectie'
 
-// Voorbeelddata - zou in productie van API komen
-const nieuwsItems: Nieuws[] = [
-  {
-    id: 1,
-    titel: 'Kwartaalresultaten overtreffen verwachtingen',
-    datum: '2023-03-14',
-    samenvatting: 'De resultaten van het eerste kwartaal zijn binnen en overtreffen alle verwachtingen. Directie deelt complimenten uit aan alle afdelingen.',
-    afbeelding: '/images/placeholder.svg'
-  },
-  {
-    id: 2,
-    titel: 'Nieuwe klant: Techniek Nederland',
-    datum: '2023-03-10',
-    samenvatting: 'We zijn verheugd om aan te kondigen dat Techniek Nederland heeft gekozen voor onze dienstverlening.',
-    afbeelding: '/images/placeholder.svg'
-  },
-  {
-    id: 3,
-    titel: 'IT-onderhoud komend weekend',
-    datum: '2023-03-08',
-    samenvatting: 'Aankomend weekend zal er IT-onderhoud plaatsvinden. Enkele systemen zullen tijdelijk niet beschikbaar zijn.',
-    afbeelding: '/images/placeholder.svg'
-  }
-];
+export default function HomePage() {
+  const [currentTime, setCurrentTime] = useState(new Date())
 
-const snelkoppelingen: Snelkoppeling[] = [
-  { id: 1, titel: 'Documenten', icoon: <IoDocumentText size={24} />, url: '/documenten' },
-  { id: 2, titel: 'Afdelingen', icoon: <IoPeople size={24} />, url: '/afdelingen' },
-  { id: 3, titel: 'Formulieren', icoon: <BsClipboard size={24} />, url: '/formulieren' },
-  { id: 4, titel: 'Kennisbank', icoon: <BsBook size={24} />, url: '/kennisbank' },
-  { id: 5, titel: 'Personeelszaken', icoon: <IoPeople size={24} />, url: '/personeelszaken' },
-  { id: 6, titel: 'Externe links', icoon: <IoLink size={24} />, url: '/links' }
-];
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date())
+    }, 1000)
 
+    return () => clearInterval(timer)
+  }, [])
 
-export default function Home() {
   return (
-      <main className="container mx-auto px-4 py-8">
-        <WelkomstBanner />
+      <main className="min-h-screen bg-gray-50">
+        {/* Welkomst Banner */}
+        <WelkomstBanner currentTime={currentTime} />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Linker kolom (2/3 breedte op grote schermen) */}
-          <div className="lg:col-span-2 space-y-8">
-            <NieuwsSectie nieuwsItems={nieuwsItems} />
-            <KalenderSectie />
-            <VergaderzaalSectie />
-            <SnelleToolLinksSectie />
-          </div>
+        {/* Snelle Links */}
+        <SnelleToolLinksSectie />
 
-          {/* Rechter kolom (1/3 breedte op grote schermen) */}
-          <div className="space-y-8">
-            <SnelkoppelingenGrid koppelingen={snelkoppelingen} />
-            <VerjaardagenJubileaSectie />
-            {/* Verplaatst naar rechterkolom */}
-            <DagagendaSectie />
-            <WeerVerkeerSectie />
-            <PollEnqueteSectie />
-            <FAQSectie />
+        {/* Main Content Grid */}
+        <div className="container mx-auto px-4 py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Linker kolom - Hoofdcontent */}
+            <div className="lg:col-span-2 space-y-8">
+              <NieuwsSectie />
+              <KalenderSectie />
+              <DagagendaSectie />
+            </div>
+
+            {/* Rechter kolom - Sidebar */}
+            <div className="space-y-8">
+              <VerjaardagenJubileaSectie />
+              <VergaderzaalSectie />
+            </div>
           </div>
         </div>
       </main>
