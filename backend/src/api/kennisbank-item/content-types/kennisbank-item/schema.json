@@ -1,0 +1,51 @@
+{
+  "kind": "collectionType",
+  "collectionName": "kennisbank_items",
+  "info": {
+    "singularName": "kennisbank-item",
+    "pluralName": "kennisbank-items",
+    "displayName": "kennisbank-item"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "titel": {
+      "type": "string",
+      "maxLength": 255,
+      "required": true
+    },
+    "inhoud": {
+      "type": "blocks"
+    },
+    "categorie": {
+      "type": "enumeration",
+      "enum": [
+        "Procedures",
+        "FAQ",
+        "Handleidingen",
+        "Beleid"
+      ]
+    },
+    "afdeling": {
+      "type": "enumeration",
+      "enum": [
+        "HR",
+        "IT",
+        "Marketing",
+        "Verkoop",
+        "Alle"
+      ]
+    },
+    "bijlagen": {
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
+      ],
+      "type": "media",
+      "multiple": true
+    }
+  }
+}

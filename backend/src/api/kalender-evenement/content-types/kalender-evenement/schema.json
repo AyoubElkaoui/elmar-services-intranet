@@ -1,0 +1,54 @@
+{
+  "kind": "collectionType",
+  "collectionName": "kalender_evenementen",
+  "info": {
+    "singularName": "kalender-evenement",
+    "pluralName": "kalender-evenementen",
+    "displayName": "kalender-evenement"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "titel": {
+      "type": "string",
+      "maxLength": 255,
+      "required": true
+    },
+    "beschrijving": {
+      "type": "blocks",
+      "required": true
+    },
+    "startDatum": {
+      "type": "date",
+      "required": true
+    },
+    "eindDatum": {
+      "type": "date",
+      "required": true
+    },
+    "locatie": {
+      "type": "string",
+      "maxLength": 500
+    },
+    "categorie": {
+      "type": "enumeration",
+      "enum": [
+        "Meeting",
+        "Training",
+        "Event",
+        "Deadline"
+      ]
+    },
+    "afdeling": {
+      "type": "enumeration",
+      "enum": [
+        "HR",
+        "IT",
+        "Marketing",
+        "Verkoop",
+        "Alle"
+      ]
+    }
+  }
+}

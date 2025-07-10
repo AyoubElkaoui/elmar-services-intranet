@@ -1,5 +1,5 @@
 /**
- * nieuws-item controller
+ * evenement controller
  */
 
 import { factories } from '@strapi/strapi'

@@ -1,5 +1,5 @@
 /**
- * nieuws-item router
+ * evenement router
  */
 
 import { factories } from '@strapi/strapi';

@@ -428,6 +428,183 @@ export interface ApiBestandBestand extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiFormulierFormulier extends Struct.CollectionTypeSchema {
+  collectionName: 'formulieren';
+  info: {
+    displayName: 'formulier';
+    pluralName: 'formulieren';
+    singularName: 'formulier';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    afdeling: Schema.Attribute.Enumeration<
+      ['HR', 'IT', 'Marketing', 'Verkoop', 'Alle']
+    > &
+      Schema.Attribute.Required;
+    beschrijving: Schema.Attribute.Blocks & Schema.Attribute.Required;
+    bestand: Schema.Attribute.Media<'images' | 'files' | 'videos'>;
+    categorie: Schema.Attribute.Enumeration<
+      ['HR', 'IT', 'Marketing', 'Verkoop', 'Algemeen']
+    > &
+      Schema.Attribute.Required;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::formulier.formulier'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    title: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 255;
+      }>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    verplicht: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+  };
+}
+
+export interface ApiHandigeLinkHandigeLink extends Struct.CollectionTypeSchema {
+  collectionName: 'handige_links';
+  info: {
+    displayName: 'handige-link';
+    pluralName: 'handige-links';
+    singularName: 'handige-link';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    afdeling: Schema.Attribute.Enumeration<
+      ['HR', 'IT', 'Marketing', 'Verkoop', 'Alle']
+    >;
+    beschrijving: Schema.Attribute.Text &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 500;
+      }>;
+    categorie: Schema.Attribute.Enumeration<
+      ['Intern', 'Extern', 'Tools', 'Software']
+    >;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::handige-link.handige-link'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    titel: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 255;
+      }>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    url: Schema.Attribute.String & Schema.Attribute.Required;
+  };
+}
+
+export interface ApiKalenderEvenementKalenderEvenement
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'kalender_evenementen';
+  info: {
+    displayName: 'kalender-evenement';
+    pluralName: 'kalender-evenementen';
+    singularName: 'kalender-evenement';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    afdeling: Schema.Attribute.Enumeration<
+      ['HR', 'IT', 'Marketing', 'Verkoop', 'Alle']
+    >;
+    beschrijving: Schema.Attribute.Blocks & Schema.Attribute.Required;
+    categorie: Schema.Attribute.Enumeration<
+      ['Meeting', 'Training', 'Event', 'Deadline']
+    >;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    eindDatum: Schema.Attribute.Date & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::kalender-evenement.kalender-evenement'
+    > &
+      Schema.Attribute.Private;
+    locatie: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 500;
+      }>;
+    publishedAt: Schema.Attribute.DateTime;
+    startDatum: Schema.Attribute.Date & Schema.Attribute.Required;
+    titel: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 255;
+      }>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiKennisbankItemKennisbankItem
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'kennisbank_items';
+  info: {
+    displayName: 'kennisbank-item';
+    pluralName: 'kennisbank-items';
+    singularName: 'kennisbank-item';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    afdeling: Schema.Attribute.Enumeration<
+      ['HR', 'IT', 'Marketing', 'Verkoop', 'Alle']
+    >;
+    bijlagen: Schema.Attribute.Media<
+      'images' | 'files' | 'videos' | 'audios',
+      true
+    >;
+    categorie: Schema.Attribute.Enumeration<
+      ['Procedures', 'FAQ', 'Handleidingen', 'Beleid']
+    >;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    inhoud: Schema.Attribute.Blocks;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::kennisbank-item.kennisbank-item'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    titel: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 255;
+      }>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiNieuwsItemNieuwsItem extends Struct.CollectionTypeSchema {
   collectionName: 'nieuws_items';
   info: {
@@ -987,6 +1164,10 @@ declare module '@strapi/strapi' {
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
       'api::bestand.bestand': ApiBestandBestand;
+      'api::formulier.formulier': ApiFormulierFormulier;
+      'api::handige-link.handige-link': ApiHandigeLinkHandigeLink;
+      'api::kalender-evenement.kalender-evenement': ApiKalenderEvenementKalenderEvenement;
+      'api::kennisbank-item.kennisbank-item': ApiKennisbankItemKennisbankItem;
       'api::nieuws-item.nieuws-item': ApiNieuwsItemNieuwsItem;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;

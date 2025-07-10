@@ -1,0 +1,58 @@
+{
+  "kind": "collectionType",
+  "collectionName": "formulieren",
+  "info": {
+    "singularName": "formulier",
+    "pluralName": "formulieren",
+    "displayName": "formulier"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255
+    },
+    "beschrijving": {
+      "type": "blocks",
+      "required": true
+    },
+    "categorie": {
+      "type": "enumeration",
+      "enum": [
+        "HR",
+        "IT",
+        "Marketing",
+        "Verkoop",
+        "Algemeen"
+      ],
+      "required": true
+    },
+    "afdeling": {
+      "type": "enumeration",
+      "enum": [
+        "HR",
+        "IT",
+        "Marketing",
+        "Verkoop",
+        "Alle"
+      ],
+      "required": true
+    },
+    "bestand": {
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos"
+      ],
+      "type": "media",
+      "multiple": false
+    },
+    "verplicht": {
+      "type": "boolean",
+      "default": false
+    }
+  }
+}

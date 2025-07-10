@@ -1,5 +1,5 @@
 /**
- * nieuws-item service
+ * evenement service
  */
 
 import { factories } from '@strapi/strapi';
