@@ -1,10 +1,9 @@
-// frontend/src/lib/strapiApi.ts
-const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || 'http://localhost:1337'
 
-// Strapi v5 Response Types
-interface StrapiResponse<T> {
+const STRAPI_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || 'http://localhost:1337'
+
+export interface StrapiResponse<T> {
   data: T
-  meta?: {
+  meta: {
     pagination?: {
       page: number
       pageSize: number
@@ -14,265 +13,179 @@ interface StrapiResponse<T> {
   }
 }
 
-// Strapi v5 Media Types
-interface StrapiMediaFormat {
-  url: string
-  width: number
-  height: number
-  size: number
-}
-
-interface StrapiMedia {
-  id: number
-  documentId: string
-  url: string
-  alternativeText?: string
-  caption?: string
-  width: number
-  height: number
-  formats?: {
-    thumbnail?: StrapiMediaFormat
-    small?: StrapiMediaFormat
-    medium?: StrapiMediaFormat
-    large?: StrapiMediaFormat
-  }
-  hash: string
-  ext: string
-  mime: string
-  size: number
-  name: string
-  createdAt: string
-  updatedAt: string
-  publishedAt: string
-}
-
-// Nieuws Item Type voor Strapi v5
-export interface NieuwsItem {
-  id: number
-  documentId: string
-  titel: string
-  samenvatting: string
-  inhoud: Array<{
-    type: string
-    children: Array<{
-      text: string
-      type: string
-    }>
-  }>
-  Auteur: string
-  Categorie: string
-  Uitgelicht: boolean
-  publicatieDatum: string
-  createdAt: string
-  updatedAt: string
-  publishedAt: string
-  afbeelding?: StrapiMedia
-}
-
-// Bestand Type voor Strapi v5
-export interface BestandItem {
-  id: number
-  documentId: string
-  titel: string
-  beschrijving?: string
-  Categorie: 'beleid' | 'procedures' | 'formulieren' | 'handboeken' | 'it-documentatie' | 'algemeen'
-  afdeling: 'Alle' | 'HR' | 'IT' | 'Marketing' | 'Verkoop' | 'Management'
-  tags?: string
-  downloadbaar: boolean
-  bekijkbaar: boolean
-  versie: string
-  auteur: string
-  createdAt: string
-  updatedAt: string
-  publishedAt: string
-  bestand?: StrapiMedia
-}
-
-// Formulier Type voor Strapi v5
-export interface FormulierItem {
-  id: number
-  documentId: string
-  title: string
-  beschrijving: Array<{
-    type: string
-    children: Array<{
-      text: string
-      type: string
-    }>
-  }>
-  categorie: 'HR' | 'IT' | 'Marketing' | 'Verkoop' | 'Algemeen'
-  afdeling: 'HR' | 'IT' | 'Marketing' | 'Verkoop' | 'Alle'
-  verplicht: boolean
-  createdAt: string
-  updatedAt: string
-  publishedAt: string
-  bestand?: StrapiMedia
-}
-
 export class APIError extends Error {
-  constructor(message: string, public status: number, public details?: any) {
+  status: number
+  details?: any
+
+  constructor(message: string, status: number, details?: any) {
     super(message)
     this.name = 'APIError'
+    this.status = status
+    this.details = details
   }
-}
-
-// Simple cache
-const cache = new Map<string, { data: any; timestamp: number }>()
-const CACHE_DURATION = 5 * 60 * 1000 // 5 minuten
-
-function getCachedData<T>(key: string): T | null {
-  const cached = cache.get(key)
-  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-    return cached.data
-  }
-  return null
-}
-
-function setCachedData<T>(key: string, data: T): void {
-  cache.set(key, { data, timestamp: Date.now() })
 }
 
 async function fetchAPI<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const url = `${API_URL}/api${endpoint}`
+  const url = `${STRAPI_API_URL}${endpoint}`
 
-  if (!options.method || options.method === 'GET') {
-    const cacheKey = `${endpoint}${JSON.stringify(options)}`
-    const cachedData = getCachedData<T>(cacheKey)
-    if (cachedData) {
-      console.log('📦 Using cached data for:', endpoint)
-      return cachedData
-    }
-  }
-
-  const defaultOptions: RequestInit = {
+  const config: RequestInit = {
     headers: {
       'Content-Type': 'application/json',
-    },
-  }
-
-  const mergedOptions = {
-    ...defaultOptions,
-    ...options,
-    headers: {
-      ...defaultOptions.headers,
       ...options.headers,
     },
+    ...options,
   }
 
   try {
-    console.log('🌐 Fetching from:', url)
-    const response = await fetch(url, mergedOptions)
+    console.log(`🌐 API Call: ${url}`)
+    const response = await fetch(url, config)
+    const data = await response.json()
 
     if (!response.ok) {
-      let errorMessage = `HTTP ${response.status}: ${response.statusText}`
-      let errorDetails = null
-
-      try {
-        const errorData = await response.json()
-        console.error('❌ API Error Response:', errorData)
-        if (errorData.error) {
-          errorMessage = errorData.error.message || errorMessage
-          errorDetails = errorData.error.details
-        }
-      } catch {
-        // Als we de error response niet kunnen parsen
-      }
-
-      throw new APIError(errorMessage, response.status, errorDetails)
+      console.error(`❌ API Error ${response.status}:`, data)
+      throw new APIError(
+          data.error?.message || `HTTP error! status: ${response.status}`,
+          response.status,
+          data.error?.details
+      )
     }
 
-    const data = await response.json() as T
-    console.log('✅ API Response received for:', endpoint)
-
-    if (!options.method || options.method === 'GET') {
-      const cacheKey = `${endpoint}${JSON.stringify(options)}`
-      setCachedData(cacheKey, data)
-    }
-
+    console.log(`✅ API Success:`, data)
     return data
   } catch (error) {
     if (error instanceof APIError) {
       throw error
     }
 
-    if (error instanceof TypeError && error.message.includes('fetch')) {
-      throw new APIError('Netwerkfout: Kan geen verbinding maken met Strapi server', 0)
-    }
-
-    console.error('API Error:', error)
-    throw new APIError('Onbekende fout opgetreden', 0)
+    console.error('❌ Network Error:', error)
+    throw new APIError(
+        'Verbinding met server mislukt',
+        0
+    )
   }
 }
 
-// Nieuws API functies voor Strapi v5
+// Nieuws interface
+export interface Nieuws {
+  id: number
+  documentId: string
+  titel: string
+  samenvatting: string
+  inhoud?: any[]
+  publicatieDatum: string
+  Auteur: string
+  Categorie: string
+  Uitgelicht: boolean
+  afbeelding?: {
+    url: string
+    alternativeText?: string
+  }
+  createdAt: string
+  updatedAt: string
+  publishedAt: string
+}
+
 export const nieuwsAPI = {
   async getAll(params?: {
     page?: number
     pageSize?: number
     categorie?: string
-    uitgelicht?: boolean
     search?: string
-    sort?: string
-  }): Promise<StrapiResponse<NieuwsItem[]>> {
+  }): Promise<StrapiResponse<Nieuws[]>> {
     const searchParams = new URLSearchParams()
 
     if (params?.page) searchParams.append('pagination[page]', params.page.toString())
     if (params?.pageSize) searchParams.append('pagination[pageSize]', params.pageSize.toString())
+    if (params?.categorie && params.categorie !== 'alle') searchParams.append('filters[Categorie][$eq]', params.categorie)
+    if (params?.search) searchParams.append('filters[titel][$containsi]', params.search)
 
-    const sortBy = params?.sort || 'publicatieDatum:desc'
-    searchParams.append('sort', sortBy)
-
-    if (params?.categorie && params.categorie !== 'alle') {
-      searchParams.append('filters[Categorie][$eq]', params.categorie)
-    }
-
-    if (params?.uitgelicht !== undefined) {
-      searchParams.append('filters[Uitgelicht][$eq]', params.uitgelicht.toString())
-    }
-
-    if (params?.search) {
-      searchParams.append('filters[$or][0][titel][$containsi]', params.search)
-      searchParams.append('filters[$or][1][samenvatting][$containsi]', params.search)
-    }
-
-    searchParams.append('populate', '*')
-
-    return fetchAPI<StrapiResponse<NieuwsItem[]>>(`/nieuws-items?${searchParams.toString()}`)
-  },
-
-  async getById(idOrDocumentId: number | string): Promise<StrapiResponse<NieuwsItem>> {
-    return fetchAPI<StrapiResponse<NieuwsItem>>(`/nieuws-items/${idOrDocumentId}?populate=*`)
-  },
-
-  async getByIdViaFilter(id: number): Promise<StrapiResponse<NieuwsItem[]>> {
-    const searchParams = new URLSearchParams()
-    searchParams.append('filters[id][$eq]', id.toString())
-    searchParams.append('populate', '*')
-
-    return fetchAPI<StrapiResponse<NieuwsItem[]>>(`/nieuws-items?${searchParams.toString()}`)
-  },
-
-  async getUitgelicht(limit: number = 3): Promise<StrapiResponse<NieuwsItem[]>> {
-    const searchParams = new URLSearchParams()
-    searchParams.append('filters[Uitgelicht][$eq]', 'true')
     searchParams.append('sort', 'publicatieDatum:desc')
-    searchParams.append('pagination[limit]', limit.toString())
     searchParams.append('populate', '*')
 
-    return fetchAPI<StrapiResponse<NieuwsItem[]>>(`/nieuws-items?${searchParams.toString()}`)
+    return fetchAPI<StrapiResponse<Nieuws[]>>(`/api/nieuws-items?${searchParams.toString()}`)
   },
 
-  async getRecent(limit: number = 5): Promise<StrapiResponse<NieuwsItem[]>> {
-    const searchParams = new URLSearchParams()
-    searchParams.append('sort', 'publicatieDatum:desc')
-    searchParams.append('pagination[limit]', limit.toString())
-    searchParams.append('populate', '*')
-
-    return fetchAPI<StrapiResponse<NieuwsItem[]>>(`/nieuws-items?${searchParams.toString()}`)
+  async getById(idOrDocumentId: number | string): Promise<StrapiResponse<Nieuws>> {
+    return fetchAPI<StrapiResponse<Nieuws>>(`/api/nieuws-items/${idOrDocumentId}?populate=*`)
   }
 }
 
-// Bestanden API functies
+// Kalender Evenement interface
+export interface KalenderEvenement {
+  id: number
+  documentId: string
+  titel: string
+  startDatum: string
+  eindDatum: string
+  locatie?: string
+  categorie: string
+  afdeling: string
+  beschrijving?: any[]
+  createdAt: string
+  updatedAt: string
+  publishedAt: string
+}
+
+export const kalenderAPI = {
+  async getAll(params?: {
+    startDatum?: string
+    eindDatum?: string
+    categorie?: string
+    afdeling?: string
+  }): Promise<StrapiResponse<KalenderEvenement[]>> {
+    const searchParams = new URLSearchParams()
+
+    if (params?.startDatum) searchParams.append('filters[startDatum][$gte]', params.startDatum)
+    if (params?.eindDatum) searchParams.append('filters[startDatum][$lte]', params.eindDatum)
+    if (params?.categorie && params.categorie !== 'alle') searchParams.append('filters[categorie][$eq]', params.categorie)
+    if (params?.afdeling && params.afdeling !== 'alle') searchParams.append('filters[afdeling][$eq]', params.afdeling)
+
+    searchParams.append('sort', 'startDatum:asc')
+    searchParams.append('populate', '*')
+
+    return fetchAPI<StrapiResponse<KalenderEvenement[]>>(`/api/kalender-evenementen?${searchParams.toString()}`)
+  }
+}
+
+// Bestand interface
+export interface Bestand {
+  id: number
+  documentId: string
+  titel: string
+  beschrijving?: string
+  Categorie: 'beleid' | 'procedures' | 'formulieren' | 'handboeken' | 'it-documentatie' | 'algemeen'
+  afdeling?: 'Alle' | 'HR' | 'IT' | 'Marketing' | 'Verkoop' | 'Management'
+  auteur?: string
+  versie?: string
+  downloadbaar?: boolean
+  bekijkbaar?: boolean
+  tags?: string
+  bestand?: {
+    id: number
+    documentId: string
+    name: string
+    alternativeText?: string
+    caption?: string
+    width?: number
+    height?: number
+    formats?: any
+    hash: string
+    ext: string
+    mime: string
+    size: number
+    url: string
+    previewUrl?: string
+    provider: string
+    provider_metadata?: any
+    createdAt: string
+    updatedAt: string
+    publishedAt: string
+  }
+  createdAt: string
+  updatedAt: string
+  publishedAt: string
+}
+
 export const bestandenAPI = {
   async getAll(params?: {
     page?: number
@@ -280,320 +193,101 @@ export const bestandenAPI = {
     categorie?: string
     afdeling?: string
     search?: string
-    sort?: string
-  }): Promise<StrapiResponse<BestandItem[]>> {
+  }): Promise<StrapiResponse<Bestand[]>> {
     const searchParams = new URLSearchParams()
 
     if (params?.page) searchParams.append('pagination[page]', params.page.toString())
     if (params?.pageSize) searchParams.append('pagination[pageSize]', params.pageSize.toString())
+    if (params?.categorie && params.categorie !== 'alle') searchParams.append('filters[Categorie][$eq]', params.categorie)
+    if (params?.afdeling && params.afdeling !== 'alle') searchParams.append('filters[afdeling][$eq]', params.afdeling)
+    if (params?.search) searchParams.append('filters[titel][$containsi]', params.search)
 
-    const sortBy = params?.sort || 'updatedAt:desc'
-    searchParams.append('sort', sortBy)
-
-    if (params?.categorie && params.categorie !== 'alle') {
-      searchParams.append('filters[Categorie][$eq]', params.categorie)
-    }
-
-    if (params?.afdeling && params.afdeling !== 'alle') {
-      searchParams.append('filters[afdeling][$eq]', params.afdeling)
-    }
-
-    if (params?.search) {
-      searchParams.append('filters[$or][0][titel][$containsi]', params.search)
-      searchParams.append('filters[$or][1][beschrijving][$containsi]', params.search)
-      searchParams.append('filters[$or][2][tags][$containsi]', params.search)
-    }
-
+    searchParams.append('sort', 'updatedAt:desc')
     searchParams.append('populate', '*')
 
-    return fetchAPI<StrapiResponse<BestandItem[]>>(`/bestanden?${searchParams.toString()}`)
+    return fetchAPI<StrapiResponse<Bestand[]>>(`/api/bestanden?${searchParams.toString()}`)
   },
 
-  async getById(idOrDocumentId: number | string): Promise<StrapiResponse<BestandItem>> {
-    return fetchAPI<StrapiResponse<BestandItem>>(`/bestanden/${idOrDocumentId}?populate=*`)
-  }
-}
+  async getById(idOrDocumentId: number | string): Promise<StrapiResponse<Bestand>> {
+    console.log(`🔍 Searching for document with ID: ${idOrDocumentId}`)
 
-// Formulieren API functies
-export const formulierenAPI = {
-  async getAll(params?: {
-    page?: number
-    pageSize?: number
-    categorie?: string
-    afdeling?: string
-    search?: string
-    sort?: string
-  }): Promise<StrapiResponse<FormulierItem[]>> {
-    const searchParams = new URLSearchParams()
-
-    if (params?.page) searchParams.append('pagination[page]', params.page.toString())
-    if (params?.pageSize) searchParams.append('pagination[pageSize]', params.pageSize.toString())
-
-    const sortBy = params?.sort || 'title:asc'
-    searchParams.append('sort', sortBy)
-
-    if (params?.categorie && params.categorie !== 'alle') {
-      searchParams.append('filters[categorie][$eq]', params.categorie)
-    }
-
-    if (params?.afdeling && params.afdeling !== 'alle') {
-      searchParams.append('filters[afdeling][$eq]', params.afdeling)
-    }
-
-    if (params?.search) {
-      searchParams.append('filters[$or][0][title][$containsi]', params.search)
-    }
-
-    searchParams.append('populate', '*')
-
-    return fetchAPI<StrapiResponse<FormulierItem[]>>(`/formulieren?${searchParams.toString()}`)
-  },
-
-  async getRequired(params?: {
-    categorie?: string
-    afdeling?: string
-    search?: string
-    sort?: string
-  }): Promise<StrapiResponse<FormulierItem[]>> {
-    const searchParams = new URLSearchParams()
-
-    searchParams.append('filters[verplicht][$eq]', 'true')
-
-    const sortBy = params?.sort || 'title:asc'
-    searchParams.append('sort', sortBy)
-
-    if (params?.categorie && params.categorie !== 'alle') {
-      searchParams.append('filters[categorie][$eq]', params.categorie)
-    }
-
-    if (params?.afdeling && params.afdeling !== 'alle') {
-      searchParams.append('filters[afdeling][$eq]', params.afdeling)
-    }
-
-    if (params?.search) {
-      searchParams.append('filters[$or][0][title][$containsi]', params.search)
-    }
-
-    searchParams.append('populate', '*')
-
-    return fetchAPI<StrapiResponse<FormulierItem[]>>(`/formulieren?${searchParams.toString()}`)
-  }
-}
-
-// Helper functies
-export const contentHelpers = {
-  richTextToHtml(blocks: NieuwsItem['inhoud']): string {
-    if (!blocks || !Array.isArray(blocks)) {
-      return ''
-    }
-
-    return blocks.map(block => {
-      if (block.type === 'paragraph') {
-        const text = block.children?.map(child => child.text || '').join('') || ''
-        return `<p>${text}</p>`
-      }
-      if (block.type === 'heading') {
-        const text = block.children?.map(child => child.text || '').join('') || ''
-        return `<h2>${text}</h2>`
-      }
-      return ''
-    }).join('')
-  },
-
-  richTextToPlainText(blocks: NieuwsItem['inhoud']): string {
-    if (!blocks || !Array.isArray(blocks)) {
-      return ''
-    }
-
-    return blocks.map(block => {
-      return block.children?.map(child => child.text || '').join('') || ''
-    }).join(' ')
-  },
-
-  truncateRichText(blocks: NieuwsItem['inhoud'], maxLength: number = 150): string {
-    const plainText = this.richTextToPlainText(blocks)
-    if (plainText.length <= maxLength) return plainText
-    return plainText.substring(0, maxLength) + '...'
-  },
-
-  formatDate(dateString: string): string {
     try {
-      return new Date(dateString).toLocaleDateString('nl-NL', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric'
-      })
-    } catch {
-      return 'Onbekende datum'
+      // Probeer eerst directe lookup
+      return await fetchAPI<StrapiResponse<Bestand>>(`/api/bestanden/${idOrDocumentId}?populate=*`)
+    } catch (error: any) {
+      console.log(`⚠️ Direct lookup failed, trying alternative methods...`)
+
+      if (error.status === 404) {
+        try {
+          // Haal alle documenten op en zoek handmatig
+          const allDocs = await this.getAll()
+          const foundDoc = allDocs.data.find(doc =>
+              doc.id.toString() === idOrDocumentId.toString() ||
+              doc.documentId === idOrDocumentId.toString()
+          )
+
+          if (foundDoc) {
+            console.log(`✅ Found document via search:`, foundDoc)
+            return { data: foundDoc, meta: {} }
+          }
+
+          // Als laatste redmiddel, probeer met documentId filter
+          const filterResponse = await fetchAPI<StrapiResponse<Bestand[]>>(`/api/bestanden?filters[documentId][$eq]=${idOrDocumentId}&populate=*`)
+          if (filterResponse.data && filterResponse.data.length > 0) {
+            console.log(`✅ Found document via filter:`, filterResponse.data[0])
+            return { data: filterResponse.data[0], meta: filterResponse.meta }
+          }
+
+        } catch (searchError) {
+          console.error(`❌ Search also failed:`, searchError)
+        }
+      }
+
+      throw error
     }
-  },
-
-  formatRichText(blocks: FormulierItem['beschrijving']): string {
-    if (!blocks || !Array.isArray(blocks)) {
-      return ''
-    }
-
-    return blocks.map(block => {
-      return block.children?.map(child => child.text || '').join('') || ''
-    }).join(' ')
-  },
-
-  truncateText(text: string, maxLength: number = 150): string {
-    if (!text || text.length <= maxLength) return text || ''
-    return text.substring(0, maxLength) + '...'
   }
 }
 
+// Helper functies voor bestanden
 export const fileHelpers = {
-  formatFileSize(bytes: number): string {
-    if (bytes === 0) return '0 Bytes'
-    const k = 1024
-    const sizes = ['Bytes', 'KB', 'MB', 'GB']
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-  },
+  getFileIcon: (fileExt?: string) => {
+    if (!fileExt) return '📎'
 
-  getFileTypeIcon(ext: string): string {
-    const extension = ext.toLowerCase().replace('.', '')
-
-    const iconMap: Record<string, string> = {
-      pdf: '📄',
-      doc: '📝',
-      docx: '📝',
-      xls: '📊',
-      xlsx: '📊',
-      ppt: '📽️',
-      pptx: '📽️',
-      txt: '📄',
-      rtf: '📄',
-      csv: '📋',
-      zip: '🗜️',
-      rar: '🗜️',
-      '7z': '🗜️',
-      jpg: '🖼️',
-      jpeg: '🖼️',
-      png: '🖼️',
-      gif: '🖼️',
-      svg: '🖼️',
-      mp4: '🎥',
-      avi: '🎥',
-      mkv: '🎥',
-      mp3: '🎵',
-      wav: '🎵',
-      flac: '🎵',
-      json: '⚙️',
-      xml: '⚙️',
-      html: '🌐',
-      css: '🎨',
-      js: '📜',
-      exe: '⚙️',
-      dmg: '💿',
-      iso: '💿'
-    }
-
-    return iconMap[extension] || '📎'
-  },
-
-  getFileTypeColor(ext: string): string {
-    const extension = ext.toLowerCase().replace('.', '')
-
-    const colorMap: Record<string, string> = {
-      pdf: 'text-red-600',
-      doc: 'text-blue-600',
-      docx: 'text-blue-600',
-      xls: 'text-green-600',
-      xlsx: 'text-green-600',
-      ppt: 'text-orange-600',
-      pptx: 'text-orange-600',
-      txt: 'text-gray-600',
-      zip: 'text-purple-600',
-      rar: 'text-purple-600',
-      jpg: 'text-pink-600',
-      jpeg: 'text-pink-600',
-      png: 'text-pink-600',
-      mp4: 'text-indigo-600',
-      mp3: 'text-yellow-600'
-    }
-
-    return colorMap[extension] || 'text-gray-500'
-  },
-
-  isViewableInBrowser(ext: string): boolean {
-    const extension = ext.toLowerCase().replace('.', '')
-    const viewable = ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'svg', 'txt', 'html', 'css', 'js', 'json', 'xml']
-    return viewable.includes(extension)
-  },
-
-  getDownloadUrl(bestand?: StrapiMedia): string {
-    if (!bestand?.url) return '#'
-    return mediaHelpers.getMediaUrl(bestand.url)
-  },
-
-  viewFile(bestand?: StrapiMedia): void {
-    const url = this.getDownloadUrl(bestand)
-    if (url !== '#') {
-      window.open(url, '_blank', 'noopener,noreferrer')
+    switch (fileExt.toLowerCase()) {
+      case '.pdf': return '📄'
+      case '.doc':
+      case '.docx': return '📝'
+      case '.xls':
+      case '.xlsx': return '📊'
+      case '.ppt':
+      case '.pptx': return '📽️'
+      case '.jpg':
+      case '.jpeg':
+      case '.png':
+      case '.gif': return '🖼️'
+      case '.zip':
+      case '.rar': return '🗜️'
+      default: return '📎'
     }
   },
 
-  downloadFile(bestand?: StrapiMedia, filename?: string): void {
-    const url = this.getDownloadUrl(bestand)
-    if (url !== '#') {
-      const link = document.createElement('a')
-      link.href = url
-      link.download = filename || bestand?.name || 'download'
-      link.target = '_blank'
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-    }
+  formatFileSize: (bytes?: number) => {
+    if (!bytes) return 'Onbekend'
+    const sizes = ['B', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(1024))
+    return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${sizes[i]}`
   },
 
-  getFileInfo(bestand?: StrapiMedia) {
-    if (!bestand) return null
-
-    return {
-      name: bestand.name || 'Onbekend bestand',
-      ext: bestand.ext || '',
-      size: this.formatFileSize(bestand.size || 0),
-      icon: this.getFileTypeIcon(bestand.ext || ''),
-      color: this.getFileTypeColor(bestand.ext || ''),
-      viewable: this.isViewableInBrowser(bestand.ext || ''),
-      url: this.getDownloadUrl(bestand)
-    }
+  getFileUrl: (bestand?: Bestand['bestand']) => {
+    if (!bestand?.url) return null
+    return bestand.url.startsWith('http') ? bestand.url : `${STRAPI_API_URL}${bestand.url}`
   }
 }
 
+// Media helpers voor nieuwsberichten
 export const mediaHelpers = {
-  getMediaUrl(url?: string): string {
-    if (!url) return '/images/placeholder.svg'
-
-    if (url.startsWith('http')) return url
-
-    return `${API_URL}${url}`
-  },
-
-  getBestImageUrl(afbeelding?: StrapiMedia, preferredSize: 'thumbnail' | 'small' | 'medium' | 'large' = 'medium'): string {
-    if (!afbeelding) {
-      return '/images/placeholder.svg'
-    }
-
-    const { formats, url } = afbeelding
-
-    if (formats?.[preferredSize]) {
-      return this.getMediaUrl(formats[preferredSize].url)
-    }
-
-    if (formats?.medium) return this.getMediaUrl(formats.medium.url)
-    if (formats?.small) return this.getMediaUrl(formats.small.url)
-    if (formats?.large) return this.getMediaUrl(formats.large.url)
-    if (formats?.thumbnail) return this.getMediaUrl(formats.thumbnail.url)
-
-    return this.getMediaUrl(url)
+  getImageUrl: (url?: string) => {
+    if (!url) return null
+    return url.startsWith('http') ? url : `${STRAPI_API_URL}${url}`
   }
-}
-
-export function clearAPICache(): void {
-  cache.clear()
-  console.log('🗑️ API cache cleared')
 }

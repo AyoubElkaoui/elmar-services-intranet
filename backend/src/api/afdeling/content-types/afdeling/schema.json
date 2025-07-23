@@ -1,0 +1,45 @@
+{
+  "kind": "collectionType",
+  "collectionName": "afdelings",
+  "info": {
+    "singularName": "afdeling",
+    "pluralName": "afdelings",
+    "displayName": "Afdeling",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "naam": {
+      "type": "string"
+    },
+    "beschrijving": {
+      "type": "text"
+    },
+    "locatie": {
+      "type": "string"
+    },
+    "kleur": {
+      "type": "string"
+    },
+    "manager": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::afdeling.afdeling",
+      "inversedBy": "afdeling"
+    },
+    "afdeling": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::afdeling.afdeling",
+      "inversedBy": "medewerkers"
+    },
+    "medewerkers": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::afdeling.afdeling",
+      "mappedBy": "afdeling"
+    }
+  }
+}

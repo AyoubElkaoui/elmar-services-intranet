@@ -3,94 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { FiSearch, FiFilter, FiDownload, FiEye, FiFolder, FiAlertCircle, FiRefreshCw, FiClock, FiUser } from 'react-icons/fi'
-
-// Mock data voor demonstratie
-const mockDocumenten = [
-    {
-        id: 1,
-        titel: 'Personeelshandboek 2025',
-        beschrijving: 'Het complete personeelshandboek met alle bedrijfsrichtlijnen en procedures',
-        categorie: 'handboeken',
-        afdeling: 'HR',
-        auteur: 'HR Team',
-        versie: '2.1',
-        downloadbaar: true,
-        bekijkbaar: true,
-        updatedAt: '2025-01-15T10:30:00Z',
-        fileType: 'pdf',
-        fileSize: '2.4 MB'
-    },
-    {
-        id: 2,
-        titel: 'Veiligheidsprocedures Kantoor',
-        beschrijving: 'Veiligheidsprocedures en noodplannen voor het kantoor',
-        categorie: 'procedures',
-        afdeling: 'Alle',
-        auteur: 'Facilitair Team',
-        versie: '1.3',
-        downloadbaar: true,
-        bekijkbaar: true,
-        updatedAt: '2025-01-10T14:20:00Z',
-        fileType: 'pdf',
-        fileSize: '1.8 MB'
-    },
-    {
-        id: 3,
-        titel: 'IT Gebruikershandleiding',
-        beschrijving: 'Handleiding voor het gebruik van IT-systemen en software',
-        categorie: 'it-documentatie',
-        afdeling: 'IT',
-        auteur: 'Peter Bakker',
-        versie: '3.0',
-        downloadbaar: true,
-        bekijkbaar: true,
-        updatedAt: '2025-01-08T09:15:00Z',
-        fileType: 'pdf',
-        fileSize: '5.2 MB'
-    },
-    {
-        id: 4,
-        titel: 'Marketing Brandguidelines',
-        beschrijving: 'Richtlijnen voor het gebruik van huisstijl en branding',
-        categorie: 'handboeken',
-        afdeling: 'Marketing',
-        auteur: 'Sophie de Jong',
-        versie: '2.0',
-        downloadbaar: true,
-        bekijkbaar: true,
-        updatedAt: '2025-01-05T16:45:00Z',
-        fileType: 'pdf',
-        fileSize: '8.7 MB'
-    },
-    {
-        id: 5,
-        titel: 'Declaratieformulier 2025',
-        beschrijving: 'Formulier voor het indienen van onkostendeclaraties',
-        categorie: 'formulieren',
-        afdeling: 'HR',
-        auteur: 'Finance Team',
-        versie: '1.0',
-        downloadbaar: true,
-        bekijkbaar: true,
-        updatedAt: '2025-01-03T11:00:00Z',
-        fileType: 'pdf',
-        fileSize: '245 KB'
-    },
-    {
-        id: 6,
-        titel: 'Kwaliteitshandboek ISO 9001',
-        beschrijving: 'Kwaliteitshandboek conform ISO 9001 standaarden',
-        categorie: 'beleid',
-        afdeling: 'Management',
-        auteur: 'Kwaliteitsmanager',
-        versie: '4.2',
-        downloadbaar: true,
-        bekijkbaar: true,
-        updatedAt: '2024-12-20T13:30:00Z',
-        fileType: 'pdf',
-        fileSize: '3.1 MB'
-    }
-]
+import { bestandenAPI, fileHelpers, type Bestand } from '@/lib/strapiApi'
 
 const categories = [
     { value: 'alle', label: 'Alle categorieën' },
@@ -113,7 +26,7 @@ const afdelingen = [
 ]
 
 export default function DocumentenPagina() {
-    const [documenten, setDocumenten] = useState(mockDocumenten)
+    const [documenten, setDocumenten] = useState<Bestand[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [searchTerm, setSearchTerm] = useState('')
@@ -121,27 +34,58 @@ export default function DocumentenPagina() {
     const [selectedAfdeling, setSelectedAfdeling] = useState('alle')
 
     useEffect(() => {
-        // Simuleer loading
-        setTimeout(() => {
-            setLoading(false)
-        }, 500)
+        const loadData = async () => {
+            try {
+                setLoading(true)
+                setError(null)
+
+                console.log('🔄 Loading documents...')
+                const response = await bestandenAPI.getAll()
+                console.log('📄 Loaded bestanden:', response)
+
+                setDocumenten(response.data)
+
+            } catch (err) {
+                console.error('❌ Error loading data:', err)
+                setError('Er is een fout opgetreden bij het laden van de documenten.')
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        loadData()
     }, [])
 
     const filteredDocumenten = documenten.filter(doc => {
         const matchesSearch = doc.titel.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            doc.beschrijving.toLowerCase().includes(searchTerm.toLowerCase())
-        const matchesCategory = selectedCategory === 'alle' || doc.categorie === selectedCategory
+            doc.beschrijving?.toLowerCase().includes(searchTerm.toLowerCase())
+        const matchesCategory = selectedCategory === 'alle' || doc.Categorie === selectedCategory
         const matchesAfdeling = selectedAfdeling === 'alle' || doc.afdeling === selectedAfdeling
 
         return matchesSearch && matchesCategory && matchesAfdeling
     })
 
-    const handleView = (document: any) => {
-        alert(`Bekijk document: ${document.titel}`)
+    const handleView = (document: Bestand) => {
+        const fileUrl = fileHelpers.getFileUrl(document.bestand)
+        if (fileUrl) {
+            window.open(fileUrl, '_blank')
+        } else {
+            alert(`Bekijk document: ${document.titel}`)
+        }
     }
 
-    const handleDownload = (document: any) => {
-        alert(`Download document: ${document.titel}`)
+    const handleDownload = (document: Bestand) => {
+        const fileUrl = fileHelpers.getFileUrl(document.bestand)
+        if (fileUrl && document.bestand) {
+            const link = window.document.createElement('a')
+            link.href = fileUrl
+            link.download = document.bestand.name
+            window.document.body.appendChild(link)
+            link.click()
+            window.document.body.removeChild(link)
+        } else {
+            alert(`Download document: ${document.titel}`)
+        }
     }
 
     const formatDatum = (dateString: string) => {
@@ -156,17 +100,8 @@ export default function DocumentenPagina() {
         }
     }
 
-    const getFileIcon = (fileType: string) => {
-        switch (fileType.toLowerCase()) {
-            case 'pdf': return '📄'
-            case 'doc':
-            case 'docx': return '📝'
-            case 'xls':
-            case 'xlsx': return '📊'
-            case 'ppt':
-            case 'pptx': return '📽️'
-            default: return '📎'
-        }
+    const getInitials = (naam: string) => {
+        return naam.split(' ').map(n => n[0]).join('').toUpperCase()
     }
 
     if (loading) {
@@ -188,6 +123,32 @@ export default function DocumentenPagina() {
         )
     }
 
+    if (error) {
+        return (
+            <main className="container mx-auto px-4 py-8">
+                <div className="mb-8">
+                    <h1 className="text-3xl font-bold text-primary mb-4">Documenten & Bestanden</h1>
+                </div>
+                <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+                    <div className="flex items-center">
+                        <FiAlertCircle className="text-red-600 mr-3" size={24} />
+                        <div>
+                            <h2 className="text-lg font-medium text-red-900 mb-2">Fout bij laden</h2>
+                            <p className="text-red-700">{error}</p>
+                            <button
+                                onClick={() => window.location.reload()}
+                                className="mt-4 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center"
+                            >
+                                <FiRefreshCw className="mr-2" />
+                                Opnieuw proberen
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        )
+    }
+
     return (
         <main className="container mx-auto px-4 py-8">
             <div className="mb-8">
@@ -195,6 +156,15 @@ export default function DocumentenPagina() {
                 <p className="text-gray-600 text-lg">
                     Toegang tot alle bedrijfsdocumenten. Totaal: {documenten.length} documenten
                 </p>
+                {documenten.length === 0 && (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
+                        <p className="text-yellow-800 text-sm">
+                            <strong>Debug info:</strong><br/>
+                            • Check of je document is "Published" in Strapi admin<br/>
+                            • Open de browser console (F12) voor meer details
+                        </p>
+                    </div>
+                )}
             </div>
 
             {/* Filters */}
@@ -246,25 +216,25 @@ export default function DocumentenPagina() {
                         {/* File header */}
                         <div className="flex items-start justify-between mb-4">
                             <Link
-                                href={`/documenten/${document.id}`}
+                                href={`/documenten/${document.documentId}`}
                                 className="flex items-center flex-1 min-w-0 hover:text-primary transition-colors"
                             >
                                 <div className="text-4xl mr-3 flex-shrink-0">
-                                    {getFileIcon(document.fileType)}
+                                    {fileHelpers.getFileIcon(document.bestand?.ext)}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <h3 className="font-bold text-sm mb-1 line-clamp-2 hover:text-primary">
                                         {document.titel}
                                     </h3>
                                     <p className="text-xs font-medium text-red-600">
-                                        {document.fileType.toUpperCase()}
+                                        {document.bestand?.ext?.replace('.', '').toUpperCase() || 'DOCUMENT'}
                                     </p>
                                 </div>
                             </Link>
 
                             {/* Action buttons */}
                             <div className="flex gap-1 ml-2">
-                                {document.bekijkbaar && (
+                                {document.bekijkbaar !== false && (
                                     <button
                                         onClick={() => handleView(document)}
                                         className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -273,7 +243,7 @@ export default function DocumentenPagina() {
                                         <FiEye size={16} />
                                     </button>
                                 )}
-                                {document.downloadbaar && (
+                                {document.downloadbaar !== false && (
                                     <button
                                         onClick={() => handleDownload(document)}
                                         className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
@@ -296,19 +266,23 @@ export default function DocumentenPagina() {
                         <div className="space-y-2 mb-4">
                             <div className="flex items-center justify-between text-xs">
                                 <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full capitalize">
-                                    {document.categorie.replace('-', ' ')}
+                                    {document.Categorie.replace('-', ' ')}
                                 </span>
-                                <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
-                                    {document.afdeling}
-                                </span>
+                                {document.afdeling && (
+                                    <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                                        {document.afdeling}
+                                    </span>
+                                )}
                             </div>
 
                             <div className="flex items-center justify-between text-xs text-gray-500">
-                                <div className="flex items-center">
-                                    <FiUser className="mr-1" />
-                                    <span>{document.auteur}</span>
-                                </div>
-                                <span>{document.fileSize}</span>
+                                {document.auteur && (
+                                    <div className="flex items-center">
+                                        <FiUser className="mr-1" />
+                                        <span>{document.auteur}</span>
+                                    </div>
+                                )}
+                                <span>{fileHelpers.formatFileSize(document.bestand?.size)}</span>
                             </div>
                         </div>
 
@@ -336,13 +310,18 @@ export default function DocumentenPagina() {
                     <p className="text-gray-500 mb-4">
                         {searchTerm || selectedCategory !== 'alle' || selectedAfdeling !== 'alle'
                             ? 'Probeer andere zoektermen of filters'
-                            : 'Er zijn nog geen bestanden geüpload'
+                            : documenten.length === 0
+                                ? 'Er zijn nog geen bestanden geüpload in Strapi'
+                                : 'Geen resultaten voor de geselecteerde filters'
                         }
                     </p>
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md mx-auto">
                         <p className="text-blue-800 text-sm">
-                            <strong>Demo modus:</strong><br/>
-                            Deze pagina toont mock data. In een echte omgeving worden documenten geladen vanuit Strapi.
+                            <strong>Strapi integratie:</strong><br/>
+                            1. Ga naar Strapi admin (localhost:1337/admin)<br/>
+                            2. Voeg een "Bestand" toe in Content Manager<br/>
+                            3. Upload een bestand en klik "Save & Publish"<br/>
+                            4. Het document verschijnt hier automatisch!
                         </p>
                     </div>
                 </div>

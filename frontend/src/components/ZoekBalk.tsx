@@ -1,3 +1,4 @@
+
 'use client'
 
 import { useState } from 'react'
@@ -5,32 +6,26 @@ import { useRouter } from 'next/navigation'
 import { FiSearch } from 'react-icons/fi'
 
 export default function ZoekBalk() {
-    const [zoekQuery, setZoekQuery] = useState('')
+    const [searchTerm, setSearchTerm] = useState('')
     const router = useRouter()
 
-    const handleZoeken = (e: React.FormEvent) => {
+    const handleSearch = (e: React.FormEvent) => {
         e.preventDefault()
-        if (zoekQuery.trim()) {
-            router.push(`/zoeken?q=${encodeURIComponent(zoekQuery)}`)
+        if (searchTerm.trim()) {
+            router.push(`/zoeken?q=${encodeURIComponent(searchTerm.trim())}`)
         }
     }
 
     return (
-        <form onSubmit={handleZoeken} className="relative">
+        <form onSubmit={handleSearch} className="relative">
+            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
             <input
                 type="text"
-                placeholder="Zoeken..."
-                className="w-full py-2 px-4 rounded-full text-gray-800 focus:outline-none focus:ring-2 focus:ring-accent bg-gray-300"
-                value={zoekQuery}
-                onChange={(e) => setZoekQuery(e.target.value)}
+                placeholder="Zoek in intranet..."
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <button
-                type="submit"
-                className="absolute right-3 top-2.5 text-gray-500"
-                aria-label="Zoeken"
-            >
-                <FiSearch size={20} />
-            </button>
         </form>
     )
 }

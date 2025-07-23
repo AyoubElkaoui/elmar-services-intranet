@@ -1,77 +1,77 @@
 "use client";
 
-// src/components/ui/SnelleToolLinks.tsx
 import React from 'react';
-import {
-    FiCalendar,
-    FiFolder,
-    FiFileText,
-    FiMail,
-    FiUser,
-    FiPhone,
-    FiMonitor,
-} from 'react-icons/fi';
-import { ToolLink } from '@/types/tools';
+import Link from 'next/link';
 
-// Intern gebruikte hardcoded snelle links
-const toolLinks: ToolLink[] = [
+const tools = [
     {
         id: 1,
-        titel: 'Agenda',
-        url: '/agenda',
-        icon: <FiCalendar className="text-primary" size={20} />
+        naam: 'Email',
+        url: 'https://mail.elmarservices.nl',
+        emoji: '📧',
+        beschrijving: 'Webmail toegang'
     },
     {
         id: 2,
-        titel: 'Documenten',
-        url: '/documenten',
-        icon: <FiFolder className="text-primary" size={20} />
+        naam: 'OneDrive',
+        url: 'https://onedrive.com',
+        emoji: '☁️',
+        beschrijving: 'Cloud opslag'
     },
     {
         id: 3,
-        titel: 'Formulieren',
-        url: '/formulieren',
-        icon: <FiFileText className="text-primary" size={20} />
+        naam: 'Teams',
+        url: 'https://teams.microsoft.com',
+        emoji: '💬',
+        beschrijving: 'Video vergaderen'
     },
     {
         id: 4,
-        titel: 'Webmail',
-        url: '/mail',
-        icon: <FiMail className="text-primary" size={20} />
-    },
-    {
-        id: 5,
-        titel: 'Personeelsgids',
-        url: '/personeel',
-        icon: <FiUser className="text-primary" size={20} />
-    },
-    {
-        id: 6,
-        titel: 'Telefoongids',
-        url: '/telefoongids',
-        icon: <FiPhone className="text-primary" size={20} />
-    },
-    {
-        id: 7,
-        titel: 'IT Helpdesk',
-        url: '/helpdesk',
-        icon: <FiMonitor className="text-primary" size={20} />
+        naam: 'CRM',
+        url: '/crm',
+        emoji: '📊',
+        beschrijving: 'Klantbeheer'
     }
 ];
 
-export default function SnelleToolLinks() {
+export default function SnelleToolLinksSectie() {
     return (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-            {toolLinks.map(tool => (
-                <a
-                    key={tool.id}
-                    href={tool.url}
-                    className="flex items-center p-3 bg-white rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
-                >
-                    <span className="mr-3">{tool.icon}</span>
-                    <span className="font-medium">{tool.titel}</span>
-                </a>
-            ))}
+        <div className="p-6">
+            <div className="flex items-center mb-6">
+                <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+                    <span className="text-purple-600 text-lg">🔧</span>
+                </div>
+                <h2 className="text-xl font-bold text-gray-900">Snelle Tools</h2>
+            </div>
+
+            <div className="space-y-3">
+                {tools.map(tool => (
+                    <Link
+                        key={tool.id}
+                        href={tool.url}
+                        target={tool.url.startsWith('http') ? '_blank' : '_self'}
+                        rel={tool.url.startsWith('http') ? 'noopener noreferrer' : undefined}
+                        className="block p-3 rounded-xl hover:bg-gray-50 transition-colors group"
+                    >
+                        <div className="flex items-center">
+                            <div className="text-2xl mr-3">
+                                {tool.emoji}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <h3 className="font-semibold text-gray-900 group-hover:text-purple-600 transition-colors text-sm">
+                                    {tool.naam}
+                                </h3>
+                                <p className="text-xs text-gray-600">
+                                    {tool.beschrijving}
+                                </p>
+                            </div>
+                            <div className="text-gray-400 group-hover:text-purple-600 transition-colors">
+                                {tool.url.startsWith('http') ? '↗️' : '→'}
+                            </div>
+                        </div>
+                    </Link>
+                ))}
+            </div>
         </div>
     );
 }

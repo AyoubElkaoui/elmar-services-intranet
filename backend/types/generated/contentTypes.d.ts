@@ -369,6 +369,44 @@ export interface AdminUser extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiAfdelingAfdeling extends Struct.CollectionTypeSchema {
+  collectionName: 'afdelings';
+  info: {
+    description: '';
+    displayName: 'Afdeling';
+    pluralName: 'afdelings';
+    singularName: 'afdeling';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    afdeling: Schema.Attribute.Relation<'manyToOne', 'api::afdeling.afdeling'>;
+    beschrijving: Schema.Attribute.Text;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    kleur: Schema.Attribute.String;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::afdeling.afdeling'
+    > &
+      Schema.Attribute.Private;
+    locatie: Schema.Attribute.String;
+    manager: Schema.Attribute.Relation<'oneToOne', 'api::afdeling.afdeling'>;
+    medewerkers: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::afdeling.afdeling'
+    >;
+    naam: Schema.Attribute.String;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiBestandBestand extends Struct.CollectionTypeSchema {
   collectionName: 'bestanden';
   info: {
@@ -599,6 +637,39 @@ export interface ApiKennisbankItemKennisbankItem
       Schema.Attribute.SetMinMaxLength<{
         maxLength: 255;
       }>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiMedewerkerMedewerker extends Struct.CollectionTypeSchema {
+  collectionName: 'medewerkers';
+  info: {
+    displayName: 'Medewerker';
+    pluralName: 'medewerkers';
+    singularName: 'medewerker';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    afdeling: Schema.Attribute.Relation<'manyToOne', 'api::afdeling.afdeling'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    email: Schema.Attribute.Email;
+    functie: Schema.Attribute.String;
+    isManager: Schema.Attribute.Boolean;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::medewerker.medewerker'
+    > &
+      Schema.Attribute.Private;
+    naam: Schema.Attribute.String;
+    publishedAt: Schema.Attribute.DateTime;
+    telefoon: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1163,11 +1234,13 @@ declare module '@strapi/strapi' {
       'admin::transfer-token': AdminTransferToken;
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
+      'api::afdeling.afdeling': ApiAfdelingAfdeling;
       'api::bestand.bestand': ApiBestandBestand;
       'api::formulier.formulier': ApiFormulierFormulier;
       'api::handige-link.handige-link': ApiHandigeLinkHandigeLink;
       'api::kalender-evenement.kalender-evenement': ApiKalenderEvenementKalenderEvenement;
       'api::kennisbank-item.kennisbank-item': ApiKennisbankItemKennisbankItem;
+      'api::medewerker.medewerker': ApiMedewerkerMedewerker;
       'api::nieuws-item.nieuws-item': ApiNieuwsItemNieuwsItem;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;

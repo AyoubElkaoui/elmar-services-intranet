@@ -1,34 +1,7 @@
-'use client'
-
+// frontend/src/components/KalenderComponent.tsx
 import { useState, useEffect } from 'react'
 import { FiChevronLeft, FiChevronRight, FiCalendar } from 'react-icons/fi'
-
-interface KalenderEvenement {
-    id: number
-    documentId: string
-    titel: string
-    startDatum: string
-    eindDatum: string
-    locatie?: string
-    categorie: string
-    afdeling: string
-    beschrijving?: any[]
-    createdAt: string
-    updatedAt: string
-    publishedAt: string
-}
-
-interface KalenderResponse {
-    data: KalenderEvenement[]
-    meta?: {
-        pagination?: {
-            page: number
-            pageSize: number
-            pageCount: number
-            total: number
-        }
-    }
-}
+import { kalenderAPI, type KalenderEvenement } from '@/lib/strapiApi'
 
 export default function KalenderComponent() {
     const [huidigeMaand, setHuidigeMaand] = useState(new Date())
@@ -50,22 +23,12 @@ export default function KalenderComponent() {
             const startVanMaand = new Date(huidigeMaand.getFullYear(), huidigeMaand.getMonth(), 1)
             const eindVanMaand = new Date(huidigeMaand.getFullYear(), huidigeMaand.getMonth() + 1, 0)
 
-            const searchParams = new URLSearchParams()
-            searchParams.append('filters[startDatum][$gte]', startVanMaand.toISOString())
-            searchParams.append('filters[startDatum][$lte]', eindVanMaand.toISOString())
-            searchParams.append('sort', 'startDatum:asc')
-            searchParams.append('populate', '*')
+            const response = await kalenderAPI.getAll({
+                startDatum: startVanMaand.toISOString(),
+                eindDatum: eindVanMaand.toISOString()
+            })
 
-            const response = await fetch(
-                `${process.env.NEXT_PUBLIC_STRAPI_API_URL}/api/kalender-evenementen?${searchParams.toString()}`
-            )
-
-            if (response.ok) {
-                const data: KalenderResponse = await response.json()
-                setEvenementen(data.data || [])
-            } else {
-                throw new Error('Fout bij laden van evenementen')
-            }
+            setEvenementen(response.data)
         } catch (error) {
             console.error('Error fetching evenementen:', error)
             setError('Kon evenementen niet laden')
@@ -73,6 +36,7 @@ export default function KalenderComponent() {
             setLoading(false)
         }
     }
+
 
     const gaNaarVorigeMaand = () => {
         setHuidigeMaand(new Date(huidigeMaand.getFullYear(), huidigeMaand.getMonth() - 1))

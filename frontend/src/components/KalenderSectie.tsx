@@ -1,53 +1,87 @@
-// frontend/src/components/KalenderSectie.tsx - WERKENDE COMPONENT
 "use client";
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { FaCalendarAlt } from 'react-icons/fa';
-import { FiClock, FiMapPin } from 'react-icons/fi';
+import { kalenderAPI, type KalenderEvenement, APIError } from '@/lib/strapiApi';
 
-interface Evenement {
-    id: number;
-    attributes: {
-        titel: string;
-        startDatum: string;
-        eindDatum: string;
-        locatie?: string;
-        type: string;
-    };
-}
+// Mock data als fallback
+const mockEvenementen: KalenderEvenement[] = [
+    {
+        id: 1,
+        documentId: 'event-1',
+        titel: 'Teammeeting Marketing',
+        startDatum: new Date().toISOString().split('T')[0],
+        eindDatum: new Date().toISOString().split('T')[0],
+        locatie: 'Vergaderzaal A',
+        categorie: 'Meeting',
+        afdeling: 'Marketing',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        publishedAt: new Date().toISOString()
+    },
+    {
+        id: 2,
+        documentId: 'event-2',
+        titel: 'IT Training Nieuwe Software',
+        startDatum: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+        eindDatum: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+        locatie: 'Online',
+        categorie: 'Training',
+        afdeling: 'IT',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        publishedAt: new Date().toISOString()
+    },
+    {
+        id: 3,
+        documentId: 'event-3',
+        titel: 'Kwartaalcijfers Presentatie',
+        startDatum: new Date(Date.now() + 172800000).toISOString().split('T')[0],
+        eindDatum: new Date(Date.now() + 172800000).toISOString().split('T')[0],
+        locatie: 'Grote Zaal',
+        categorie: 'Event',
+        afdeling: 'Management',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        publishedAt: new Date().toISOString()
+    }
+];
 
 export default function KalenderSectie() {
-    const [evenementen, setEvenementen] = useState<Evenement[]>([]);
+    const [evenementen, setEvenementen] = useState<KalenderEvenement[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [useMockData, setUseMockData] = useState(false);
 
     useEffect(() => {
-        const fetchEvenementen = async () => {
-            try {
-                const today = new Date();
-                const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
-
-                const response = await fetch(
-                    `${process.env.NEXT_PUBLIC_STRAPI_API_URL}/api/evenementen?` +
-                    `filters[startDatum][$gte]=${today.toISOString()}&` +
-                    `filters[startDatum][$lte]=${nextWeek.toISOString()}&` +
-                    `sort=startDatum:asc&` +
-                    `pagination[limit]=5`
-                );
-
-                if (response.ok) {
-                    const data = await response.json();
-                    setEvenementen(data.data || []);
-                }
-            } catch (error) {
-                console.error('Error fetching evenementen:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchEvenementen();
     }, []);
+
+    const fetchEvenementen = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            const today = new Date();
+            const futureDate = new Date();
+            futureDate.setDate(today.getDate() + 30);
+
+            const response = await kalenderAPI.getAll({
+                startDatum: today.toISOString().split('T')[0],
+                eindDatum: futureDate.toISOString().split('T')[0]
+            });
+
+            setEvenementen(response.data.slice(0, 4));
+            setUseMockData(false);
+        } catch (error) {
+            console.error('Error fetching kalender:', error);
+            setEvenementen(mockEvenementen);
+            setUseMockData(true);
+            setError('Gebruik demo gegevens');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const formatDatum = (dateString: string) => {
         try {
@@ -57,73 +91,131 @@ export default function KalenderSectie() {
                 month: 'short'
             });
         } catch {
-            return 'Onbekende datum';
+            return 'Onbekend';
         }
     };
 
-    const formatTijd = (dateString: string) => {
-        try {
-            return new Date(dateString).toLocaleTimeString('nl-NL', {
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-        } catch {
-            return '--:--';
-        }
+    const getCategoryEmoji = (categorie: string) => {
+        const emojis = {
+            'Meeting': '👥',
+            'Training': '📚',
+            'Event': '🎉',
+            'Deadline': '⏰'
+        };
+        return emojis[categorie as keyof typeof emojis] || '📅';
     };
 
-    return (
-        <section className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold mb-4 flex items-center">
-                    <FaCalendarAlt className="text-primary mr-2" />
-                    Aankomende evenementen
-                </h2>
-                <Link href="/kalender" className="text-accent hover:underline text-sm">
-                    Volledige kalender
-                </Link>
-            </div>
+    const getCategoryColor = (categorie: string) => {
+        const colors = {
+            'Meeting': 'bg-blue-50 border-l-blue-400 text-blue-900',
+            'Training': 'bg-green-50 border-l-green-400 text-green-900',
+            'Event': 'bg-purple-50 border-l-purple-400 text-purple-900',
+            'Deadline': 'bg-red-50 border-l-red-400 text-red-900'
+        };
+        return colors[categorie as keyof typeof colors] || 'bg-gray-50 border-l-gray-400 text-gray-900';
+    };
 
-            {loading ? (
-                <div className="space-y-3">
+    const isToday = (dateString: string) => {
+        const today = new Date().toISOString().split('T')[0];
+        return dateString === today;
+    };
+
+    if (loading) {
+        return (
+            <div className="p-8">
+                <div className="flex items-center mb-8">
+                    <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center mr-4">
+                        <span className="text-green-600 text-xl">📅</span>
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-900">Komende Evenementen</h2>
+                </div>
+                <div className="space-y-4">
                     {[1, 2, 3].map(i => (
                         <div key={i} className="animate-pulse">
-                            <div className="h-16 bg-gray-200 rounded"></div>
+                            <div className="h-20 bg-gray-200 rounded-xl"></div>
                         </div>
                     ))}
                 </div>
-            ) : (
-                <div className="space-y-4">
-                    {evenementen.length > 0 ? (
-                        evenementen.map(event => (
-                            <div key={event.id} className="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg">
-                                <div className="text-center min-w-[60px]">
-                                    <div className="text-xs text-gray-500">
-                                        {formatDatum(event.attributes.startDatum)}
+            </div>
+        );
+    }
+
+    return (
+        <div className="p-8">
+            <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center">
+                    <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center mr-4">
+                        <span className="text-green-600 text-xl">📅</span>
+                    </div>
+                    <div>
+                        <h2 className="text-2xl font-bold text-gray-900">Komende Evenementen</h2>
+                        {useMockData && (
+                            <p className="text-xs text-amber-600 mt-1">Demo modus - Strapi niet verbonden</p>
+                        )}
+                    </div>
+                </div>
+                <Link
+                    href="/kalender"
+                    className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                >
+                    Kalender →
+                </Link>
+            </div>
+
+            <div className="space-y-4">
+                {evenementen.length > 0 ? (
+                    evenementen.map(event => (
+                        <div key={event.id} className={`p-4 rounded-xl border-l-4 transition-all hover:shadow-sm ${getCategoryColor(event.categorie)} ${isToday(event.startDatum) ? 'ring-2 ring-green-200' : ''}`}>
+                            <div className="flex items-start justify-between">
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <span className="text-xl">{getCategoryEmoji(event.categorie)}</span>
+                                        <h3 className="font-bold text-lg line-clamp-1">
+                                            {event.titel}
+                                        </h3>
+                                        {isToday(event.startDatum) && (
+                                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800 font-medium">
+                                                Vandaag
+                                            </span>
+                                        )}
                                     </div>
-                                    <div className="text-sm font-medium">
-                                        {formatTijd(event.attributes.startDatum)}
+                                    <div className="flex items-center text-sm mb-3">
+                                        <span className="mr-2">📍</span>
+                                        <span className="mr-4">{formatDatum(event.startDatum)}</span>
+                                        {event.locatie && (
+                                            <>
+                                                <span className="mr-2">🏢</span>
+                                                <span className="truncate">{event.locatie}</span>
+                                            </>
+                                        )}
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="px-2 py-1 rounded-full text-xs bg-white/70 border font-medium">
+                                            {event.categorie}
+                                        </span>
+                                        <span className="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-700 font-medium">
+                                            {event.afdeling}
+                                        </span>
                                     </div>
                                 </div>
-                                <div className="flex-1">
-                                    <h3 className="font-medium text-sm mb-1">{event.attributes.titel}</h3>
-                                    {event.attributes.locatie && (
-                                        <div className="flex items-center text-xs text-gray-600">
-                                            <FiMapPin className="mr-1" />
-                                            <span>{event.attributes.locatie}</span>
-                                        </div>
-                                    )}
+                                <div className="ml-4 flex-shrink-0 text-center">
+                                    <div className="text-2xl font-bold">
+                                        {new Date(event.startDatum).getDate()}
+                                    </div>
+                                    <div className="text-xs text-gray-500 uppercase font-medium">
+                                        {new Date(event.startDatum).toLocaleDateString('nl-NL', { month: 'short' })}
+                                    </div>
                                 </div>
                             </div>
-                        ))
-                    ) : (
-                        <div className="text-center py-6 text-gray-500">
-                            <FaCalendarAlt className="mx-auto mb-2" size={24} />
-                            <p>Geen evenementen gepland</p>
                         </div>
-                    )}
-                </div>
-            )}
-        </section>
+                    ))
+                ) : (
+                    <div className="text-center py-16 text-gray-500">
+                        <div className="text-6xl mb-4">📅</div>
+                        <p className="text-lg">Geen evenementen gepland</p>
+                    </div>
+                )}
+            </div>
+        </div>
     );
 }

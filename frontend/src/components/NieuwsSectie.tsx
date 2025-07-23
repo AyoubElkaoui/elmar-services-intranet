@@ -1,213 +1,209 @@
-// frontend/src/components/NieuwsSectie.tsx
 "use client";
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { FaNewspaper } from 'react-icons/fa';
-import { FiCalendar, FiUser, FiAlertCircle, FiRefreshCw } from 'react-icons/fi';
-import { nieuwsAPI, mediaHelpers, contentHelpers, APIError, type NieuwsItem } from '@/lib/strapiApi';
+import { nieuwsAPI, type Nieuws, APIError } from '@/lib/strapiApi';
+
+// Mock data als fallback
+const mockNieuws: Nieuws[] = [
+    {
+        id: 1,
+        documentId: 'news-1',
+        titel: 'Nieuwe HR-richtlijnen voor 2025',
+        samenvatting: 'Belangrijke updates voor het personeelsbeleid en nieuwe procedures die vanaf januari ingaan.',
+        publicatieDatum: new Date().toISOString(),
+        Auteur: 'HR Team',
+        Categorie: 'HR',
+        Uitgelicht: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        publishedAt: new Date().toISOString()
+    },
+    {
+        id: 2,
+        documentId: 'news-2',
+        titel: 'IT Systeem onderhoud gepland',
+        samenvatting: 'Geplande onderhoudsworkzaamheden aan onze IT-infrastructuur dit weekend.',
+        publicatieDatum: new Date(Date.now() - 86400000).toISOString(),
+        Auteur: 'Peter Bakker',
+        Categorie: 'IT',
+        Uitgelicht: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        publishedAt: new Date().toISOString()
+    },
+    {
+        id: 3,
+        documentId: 'news-3',
+        titel: 'Nieuwe marketingcampagne gelanceerd',
+        samenvatting: 'Onze nieuwste marketingcampagne is live gegaan met focus op duurzaamheid.',
+        publicatieDatum: new Date(Date.now() - 172800000).toISOString(),
+        Auteur: 'Sophie de Jong',
+        Categorie: 'Marketing',
+        Uitgelicht: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        publishedAt: new Date().toISOString()
+    }
+];
 
 export default function NieuwsSectie() {
-    const [nieuws, setNieuws] = useState<NieuwsItem[]>([]);
+    const [nieuws, setNieuws] = useState<Nieuws[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [retrying, setRetrying] = useState(false);
-
-    const fetchNieuws = async () => {
-        try {
-            setLoading(true);
-            setError(null);
-            
-            console.log('🔄 Fetching nieuws from Strapi v5...');
-            const response = await nieuwsAPI.getRecent(3);
-            console.log('📰 Nieuws received:', response.data?.length || 0, 'items');
-            
-            setNieuws(response.data || []);
-        } catch (error) {
-            console.error('❌ Error fetching nieuws:', error);
-            
-            if (error instanceof APIError) {
-                if (error.status === 0) {
-                    setError('Kan geen verbinding maken met Strapi. Controleer of Strapi draait op http://localhost:1337');
-                } else if (error.status === 404) {
-                    setError('Content Type "nieuws-items" bestaat niet in Strapi. Controleer of je het Content Type hebt aangemaakt.');
-                } else if (error.status === 403) {
-                    setError('Geen toegang tot nieuws API. Controleer de permissions in Strapi Admin.');
-                } else {
-                    setError(`Fout bij laden van nieuws: ${error.message}`);
-                }
-            } else {
-                setError('Er is een onbekende fout opgetreden bij het laden van het nieuws');
-            }
-        } finally {
-            setLoading(false);
-            setRetrying(false);
-        }
-    };
+    const [useMockData, setUseMockData] = useState(false);
 
     useEffect(() => {
         fetchNieuws();
     }, []);
 
-    const handleRetry = async () => {
-        setRetrying(true);
-        await fetchNieuws();
-    };
-
-    const formatDatum = (dateString: string) => {
+    const fetchNieuws = async () => {
         try {
-            return new Date(dateString).toLocaleDateString('nl-NL', {
-                day: 'numeric',
-                month: 'long'
+            setLoading(true);
+            setError(null);
+            const response = await nieuwsAPI.getAll({
+                pageSize: 5,
+                page: 1
             });
-        } catch {
-            return 'Onbekende datum';
+            setNieuws(response.data);
+            setUseMockData(false);
+        } catch (error) {
+            console.error('Error fetching nieuws:', error);
+            // Use mock data as fallback
+            setNieuws(mockNieuws);
+            setUseMockData(true);
+            setError('Gebruik demo gegevens');
+        } finally {
+            setLoading(false);
         }
     };
 
-    const getImageUrl = (item: NieuwsItem) => {
-        return mediaHelpers.getBestImageUrl(item.afbeelding, 'small');
+    const getRelativeTime = (dateString: string) => {
+        try {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+
+            if (diffInHours < 1) return 'Net geplaatst';
+            if (diffInHours < 24) return `${diffInHours}u geleden`;
+            if (diffInHours < 48) return 'Gisteren';
+            return date.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' });
+        } catch {
+            return 'Onbekend';
+        }
+    };
+
+    const getCategoryColor = (categorie: string) => {
+        const colors = {
+            'Algemeen': 'bg-blue-100 text-blue-800',
+            'HR': 'bg-green-100 text-green-800',
+            'IT': 'bg-purple-100 text-purple-800',
+            'Marketing': 'bg-pink-100 text-pink-800',
+            'Verkoop': 'bg-orange-100 text-orange-800'
+        };
+        return colors[categorie as keyof typeof colors] || 'bg-gray-100 text-gray-800';
     };
 
     if (loading) {
         return (
-            <section className="bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-2xl font-bold text-primary mb-4 flex items-center">
-                    <FaNewspaper className="mr-2" />
-                    Laatste nieuws
-                </h2>
-                <div className="animate-pulse space-y-4">
-                    {[1, 2, 3].map(i => (
-                        <div key={i} className="flex space-x-4">
-                            <div className="w-20 h-16 bg-gray-200 rounded"></div>
-                            <div className="flex-1 space-y-2">
-                                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                                <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+            <div className="p-8">
+                <div className="flex items-center mb-8">
+                    <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center mr-4">
+                        <span className="text-blue-600 text-xl">📰</span>
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-900">Laatste Nieuws</h2>
+                </div>
+                <div className="space-y-6">
+                    {[1, 2, 3, 4].map(i => (
+                        <div key={i} className="animate-pulse">
+                            <div className="flex items-start space-x-4">
+                                <div className="w-16 h-16 bg-gray-200 rounded-xl flex-shrink-0"></div>
+                                <div className="flex-1">
+                                    <div className="h-5 bg-gray-200 rounded mb-2"></div>
+                                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-3"></div>
+                                    <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                                </div>
                             </div>
                         </div>
                     ))}
                 </div>
-            </section>
-        );
-    }
-
-    if (error) {
-        return (
-            <section className="bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-2xl font-bold text-primary mb-4 flex items-center">
-                    <FaNewspaper className="mr-2" />
-                    Laatste nieuws
-                </h2>
-                <div className="space-y-4">
-                    <div className="flex items-start p-4 bg-red-50 border border-red-200 rounded-lg">
-                        <FiAlertCircle className="text-red-500 mr-3 flex-shrink-0 mt-0.5" size={20} />
-                        <div className="flex-1">
-                            <p className="text-red-800 font-medium">Fout bij laden van nieuws</p>
-                            <p className="text-red-600 text-sm mt-1">{error}</p>
-                        </div>
-                    </div>
-                    
-                    <div className="flex gap-3">
-                        <button 
-                            onClick={handleRetry}
-                            disabled={retrying}
-                            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                        >
-                            <FiRefreshCw className={retrying ? 'animate-spin' : ''} />
-                            {retrying ? 'Bezig...' : 'Probeer opnieuw'}
-                        </button>
-                        
-                        <a 
-                            href="http://localhost:1337/admin" 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm"
-                        >
-                            Open Strapi Admin
-                        </a>
-                    </div>
-                </div>
-            </section>
+            </div>
         );
     }
 
     return (
-        <section className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-primary flex items-center">
-                    <FaNewspaper className="mr-2" />
-                    Laatste nieuws
-                </h2>
-                <Link href="/nieuws" className="text-accent hover:underline text-sm">
-                    Alle nieuws
+        <div className="p-8">
+            <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center">
+                    <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center mr-4">
+                        <span className="text-blue-600 text-xl">📰</span>
+                    </div>
+                    <div>
+                        <h2 className="text-2xl font-bold text-gray-900">Laatste Nieuws</h2>
+                        {useMockData && (
+                            <p className="text-xs text-amber-600 mt-1">Demo modus - Strapi niet verbonden</p>
+                        )}
+                    </div>
+                </div>
+                <Link
+                    href="/nieuws"
+                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                >
+                    Alle nieuws →
                 </Link>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-6">
                 {nieuws.length > 0 ? (
-                    nieuws.map(item => (
-                        <div key={item.id} className="flex space-x-4 p-4 hover:bg-gray-50 rounded-lg transition-colors">
-                            <div className="w-20 h-16 relative flex-shrink-0">
-                                <Image
-                                    src={getImageUrl(item)}
-                                    alt={item.titel}
-                                    fill
-                                    className="object-cover rounded"
-                                    sizes="80px"
-                                />
-                                {item.Uitgelicht && (
-                                    <div className="absolute -top-1 -right-1">
-                                        <span className="bg-accent text-white text-xs px-1 py-0.5 rounded-full font-bold">
-                                            ★
-                                        </span>
+                    nieuws.map((artikel) => (
+                        <article key={artikel.id} className="group">
+                            <Link href={`/nieuws/${artikel.documentId}`} className="block">
+                                <div className="flex items-start space-x-4 p-4 rounded-xl hover:bg-gray-50 transition-colors">
+                                    <div className="flex-shrink-0">
+                                        {artikel.afbeelding?.url ? (
+                                            <img
+                                                src={`${process.env.NEXT_PUBLIC_STRAPI_API_URL || 'http://localhost:1337'}${artikel.afbeelding.url}`}
+                                                alt={artikel.afbeelding.alternativeText || artikel.titel}
+                                                className="w-16 h-16 object-cover rounded-xl"
+                                            />
+                                        ) : (
+                                            <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center">
+                                                <span className="text-blue-600 text-2xl">📝</span>
+                                            </div>
+                                        )}
                                     </div>
-                                )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <h3 className="font-medium text-sm mb-1 line-clamp-2">
-                                    {item.titel}
-                                </h3>
-                                <div className="flex items-center text-xs text-gray-500 mb-2">
-                                    <FiCalendar className="mr-1" />
-                                    <span>{formatDatum(item.publicatieDatum)}</span>
-                                    <span className="mx-2">•</span>
-                                    <FiUser className="mr-1" />
-                                    <span>{item.Auteur}</span>
-                                    <span className="mx-2">•</span>
-                                    <span className="capitalize bg-gray-100 px-2 py-0.5 rounded-full">
-                                        {item.Categorie}
-                                    </span>
+                                    <div className="flex-1 min-w-0">
+                                        <h3 className="font-bold text-lg text-gray-900 group-hover:text-blue-600 transition-colors mb-2 line-clamp-2">
+                                            {artikel.titel}
+                                        </h3>
+                                        <p className="text-gray-600 mb-4 line-clamp-2 leading-relaxed">
+                                            {artikel.samenvatting}
+                                        </p>
+                                        <div className="flex items-center gap-4 text-sm">
+                                            <div className="flex items-center text-gray-500">
+                                                <span className="mr-2">⏰</span>
+                                                {getRelativeTime(artikel.publicatieDatum)}
+                                            </div>
+                                            <div className="flex items-center text-gray-500">
+                                                <span className="mr-2">👤</span>
+                                                {artikel.Auteur}
+                                            </div>
+                                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${getCategoryColor(artikel.Categorie)}`}>
+                                                {artikel.Categorie}
+                                            </span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <p className="text-xs text-gray-600 line-clamp-2 mb-2">
-                                    {item.samenvatting}
-                                </p>
-                                <Link
-                                    href={`/nieuws/${item.id}`}
-                                    className="text-accent text-xs hover:underline font-medium"
-                                >
-                                    Lees meer →
-                                </Link>
-                            </div>
-                        </div>
+                            </Link>
+                        </article>
                     ))
                 ) : (
-                    <div className="text-center py-8 text-gray-500">
-                        <FaNewspaper className="mx-auto mb-3" size={32} />
-                        <p className="font-medium">Geen nieuwsberichten beschikbaar</p>
-                        <p className="text-sm mt-1">Voeg nieuws toe in Strapi om deze sectie te vullen</p>
-                        <a 
-                            href="http://localhost:1337/admin" 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="inline-block mt-3 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark text-sm"
-                        >
-                            Open Strapi Admin
-                        </a>
+                    <div className="text-center py-16 text-gray-500">
+                        <div className="text-6xl mb-4">📰</div>
+                        <p className="text-lg">Geen nieuws beschikbaar</p>
                     </div>
                 )}
             </div>
-        </section>
+        </div>
     );
 }

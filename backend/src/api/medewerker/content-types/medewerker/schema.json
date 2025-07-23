@@ -1,0 +1,35 @@
+{
+  "kind": "collectionType",
+  "collectionName": "medewerkers",
+  "info": {
+    "singularName": "medewerker",
+    "pluralName": "medewerkers",
+    "displayName": "Medewerker"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "naam": {
+      "type": "string"
+    },
+    "functie": {
+      "type": "string"
+    },
+    "email": {
+      "type": "email"
+    },
+    "telefoon": {
+      "type": "string"
+    },
+    "isManager": {
+      "type": "boolean"
+    },
+    "afdeling": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::afdeling.afdeling",
+      "inversedBy": "medewerkers"
+    }
+  }
+}
