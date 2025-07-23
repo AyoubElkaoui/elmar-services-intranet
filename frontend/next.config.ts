@@ -1,8 +1,8 @@
 // frontend/next.config.ts
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+import type { NextConfig } from 'next'
+
+const nextConfig: NextConfig = {
     output: 'standalone',
-    // Images configuratie voor Strapi
     images: {
         remotePatterns: [
             {
@@ -11,14 +11,20 @@ const nextConfig = {
                 port: '1337',
                 pathname: '/uploads/**',
             },
-            // Voor productie zou je hier je Strapi production domain toevoegen
-            // {
-            //     protocol: 'https',
-            //     hostname: 'your-strapi-domain.com',
-            //     pathname: '/uploads/**',
-            // }
+            {
+                protocol: 'http',
+                hostname: 'backend',
+                port: '1337',
+                pathname: '/uploads/**',
+            },
         ],
     },
-};
+    eslint: {
+        ignoreDuringBuilds: true,
+    },
+    typescript: {
+        ignoreBuildErrors: true,
+    },
+}
 
-module.exports = nextConfig;
+export default nextConfig

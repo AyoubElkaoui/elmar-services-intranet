@@ -18,7 +18,7 @@ export default function Header() {
             <div className="container mx-auto px-4 py-4">
                 <div className="flex justify-between items-center">
                     <div className="flex items-center">
-                        <div className="mr-4">
+                        <Link href="/" className="mr-4">
                             <Image
                                 src="/images/logo.png"
                                 alt="Elmar Services Logo"
@@ -27,7 +27,7 @@ export default function Header() {
                                 className="h-20 w-auto"
                                 priority
                             />
-                        </div>
+                        </Link>
                         <h1 className="text-2xl font-bold hidden md:block">Intranet</h1>
                     </div>
 
@@ -58,11 +58,17 @@ export default function Header() {
                         <li className={`px-3 py-2 md:py-1 rounded-md md:rounded-t-md md:rounded-b-none ${isActive('/documenten') ? 'bg-primary-light font-medium' : 'hover:bg-primary-light'}`}>
                             <Link href="/documenten">Documenten</Link>
                         </li>
+                        <li className={`px-3 py-2 md:py-1 rounded-md md:rounded-t-md md:rounded-b-none ${isActive('/formulieren') ? 'bg-primary-light font-medium' : 'hover:bg-primary-light'}`}>
+                            <Link href="/formulieren">Formulieren</Link>
+                        </li>
                         <li className={`px-3 py-2 md:py-1 rounded-md md:rounded-t-md md:rounded-b-none ${isActive('/afdelingen') ? 'bg-primary-light font-medium' : 'hover:bg-primary-light'}`}>
                             <Link href="/afdelingen">Afdelingen</Link>
                         </li>
-                        <li className={`px-3 py-2 md:py-1 rounded-md md:rounded-t-md md:rounded-b-none ${isActive('/personeelszaken') ? 'bg-primary-light font-medium' : 'hover:bg-primary-light'}`}>
-                            <Link href="/personeelszaken">Personeelszaken</Link>
+                        <li className={`px-3 py-2 md:py-1 rounded-md md:rounded-t-md md:rounded-b-none ${isActive('/links') ? 'bg-primary-light font-medium' : 'hover:bg-primary-light'}`}>
+                            <Link href="/links">Handige Links</Link>
+                        </li>
+                        <li className={`px-3 py-2 md:py-1 rounded-md md:rounded-t-md md:rounded-b-none ${isActive('/kennisbank') ? 'bg-primary-light font-medium' : 'hover:bg-primary-light'}`}>
+                            <Link href="/kennisbank">Kennisbank</Link>
                         </li>
                         <li className={`px-3 py-2 md:py-1 rounded-md md:rounded-t-md md:rounded-b-none ${isActive('/kalender') ? 'bg-primary-light font-medium' : 'hover:bg-primary-light'}`}>
                             <Link href="/kalender">Kalender</Link>
